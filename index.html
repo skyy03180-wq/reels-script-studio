@@ -1578,7 +1578,7 @@
       generationConfig: {
         temperature: temp,
         topP: 0.95,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 16384,
         responseMimeType: 'application/json',
         responseSchema: makeSchema()
       }
@@ -1643,7 +1643,7 @@
     text = text.trim();
 
     if (!text) {
-      if (cand.finishReason === 'MAX_TOKENS') throw new AppError('대본이 너무 길어 잘렸어요. 길이를 "20초 콤팩트"로 바꿔 다시 시도해 주세요.');
+      if (cand.finishReason === 'MAX_TOKENS') throw new AppError('대본이 너무 길어 잘렸어요. 길이를 "20초 콤팩트"로 바꾸거나, 모델을 "빠름" 계열로 바꿔 다시 시도해 주세요.');
       if (cand.finishReason === 'SAFETY') throw new AppError('안전 정책에 걸려 생성이 중단됐어요. 표현을 조금 바꿔 다시 시도해 주세요.');
       if (cand.finishReason === 'PROHIBITED_CONTENT') throw new AppError('정책상 생성할 수 없는 내용으로 판단됐어요. 브리프를 조금 다르게 적어 다시 시도해 주세요.');
       throw new AppError('응답이 비어 있어요. 다시 시도해 주세요.');
