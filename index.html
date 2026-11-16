@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#FFF8F5" />
-<meta name="description" content="제품 소구점 이미지·텍스트와 레퍼런스 영상으로 뷰티 릴스 나레이션 대본을 만드는 도구" />
+<meta name="description" content="제품 소구점 이미지·PDF·텍스트와 레퍼런스 영상으로 뷰티 릴스 나레이션 대본을 만드는 도구" />
 <title>릴스 대본 스튜디오</title>
 <style>
   :root{
@@ -118,6 +118,16 @@
   .thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .thumb-x{position:absolute;top:4px;right:4px;width:25px;height:25px;border-radius:50%;border:none;background:rgba(24,14,18,.6);color:#fff;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
   .thumb-x:active{background:rgba(24,14,18,.85)}
+
+  /* pdf list */
+  .pdf-list{display:grid;gap:7px;margin-top:10px}
+  .pdf-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg-soft)}
+  .pdf-badge{flex:0 0 auto;font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#fff;background:#D33A34;border-radius:7px;padding:9px 5px;line-height:1;text-align:center;min-width:38px}
+  .pdf-body{flex:1 1 auto;min-width:0}
+  .pdf-name{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdf-size{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+  .pdf-x{flex:0 0 auto;appearance:none;border:1px solid var(--line-2);background:var(--card);color:var(--ink-3);width:28px;height:28px;border-radius:50%;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  .pdf-x:active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 
   /* video */
   .video-preview{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000}
@@ -242,23 +252,25 @@
     </div>
   </details>
 
-  <!-- 이미지 -->
+  <!-- 이미지·PDF -->
   <section class="card">
-    <div class="card-head"><h2>제품 소구점 이미지</h2><span class="count" id="imgCount">0장</span></div>
-    <div class="drop" id="imageDrop" role="button" tabindex="0" aria-label="제품 소구점 이미지 선택">
-      <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" multiple hidden />
+    <div class="card-head"><h2>제품 소구점 이미지·PDF</h2><span class="count" id="imgCount">0개</span></div>
+    <div class="drop" id="imageDrop" role="button" tabindex="0" aria-label="제품 소구점 이미지 또는 PDF 선택">
+      <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif,application/pdf,.pdf" multiple hidden />
       <div class="drop-icon" aria-hidden="true">🖼️</div>
-      <div class="drop-main">브랜드 브리프·USP 캡처 올리기</div>
-      <div class="drop-sub">PNG · JPG · WEBP / 여러 장 · 끌어다 놓아도 돼요</div>
+      <div class="drop-main">브랜드 브리프·USP 캡처·PDF 올리기</div>
+      <div class="drop-sub">PNG · JPG · WEBP · PDF / 여러 개 · 끌어다 놓아도 돼요</div>
     </div>
     <div class="thumbs" id="thumbs" hidden></div>
+    <div class="pdf-list" id="pdfList" hidden></div>
+    <p class="hint">이미지와 PDF를 섞어서 올려도 돼요. 가이드라인 PDF는 페이지째로 읽어서 소구점·프로모션·필수 태그를 뽑아요.</p>
   </section>
 
   <!-- 텍스트 -->
   <section class="card">
     <div class="card-head"><h2>제품 소구점 텍스트</h2><span class="count" id="textCount">0자</span></div>
     <textarea id="productText" placeholder="예)&#10;제품: 코스알엑스 블루 펩타이드 세럼 50ml&#10;소구점: 고함량 블루 펩타이드, 바쿠치올, 저자극, 산뜻쫀쫀 안 밀림&#10;프로모션: 올리브영 44% 할인 40,900원 + 겔마스크 2장&#10;필수 태그: @cosrx_korea #코스알엑스"></textarea>
-    <p class="hint">이미지에 적힌 내용도 같이 읽어요. 이미지가 없으면 여기만 채워도 돼요.</p>
+    <p class="hint">이미지·PDF에 적힌 내용도 같이 읽어요. 첨부가 없으면 여기만 채워도 돼요.</p>
   </section>
 
   <!-- 레퍼런스 영상 -->
@@ -377,7 +389,8 @@
     <ul>
       <li>레퍼런스는 인스타 릴스를 <b>화면 기록</b>하거나 저장한 파일을 그대로 올리면 돼요. 3~60초면 충분해요.</li>
       <li>작은 영상은 바로 분석하고, 큰 영상은 Gemini에 자동 업로드한 뒤 분석해요(진행률 표시). 1분 이내 영상이면 충분해요.</li>
-      <li>영상이 없어도 이미지·텍스트만으로 대본을 만들 수 있어요. 영상이 있으면 컷 템포와 말투까지 맞춰요.</li>
+      <li>영상이 없어도 이미지·PDF·텍스트만으로 대본을 만들 수 있어요. 영상이 있으면 컷 템포와 말투까지 맞춰요.</li>
+      <li>제품 가이드라인·브랜드 브리프가 <b>PDF</b>면 그대로 올리면 돼요. 작은 PDF는 바로, 큰 PDF는 Gemini에 자동 업로드한 뒤 읽어요.</li>
       <li>마음에 안 들면 <b>빠른 다듬기</b>로 한 번에 다듬는 게 새로 뽑는 것보다 빨라요.</li>
       <li>API 키는 이 브라우저에만 저장돼요. 다른 기기에서는 한 번 더 넣어주세요.</li>
     </ul>
@@ -407,7 +420,8 @@
   var UPLOAD_START = 'https://generativelanguage.googleapis.com/upload/v1beta/files';
   var INLINE_VIDEO_LIMIT = 18 * 1024 * 1024;
   var INLINE_TOTAL_LIMIT = 19 * 1024 * 1024;
-  var MAX_IMAGES = 8;
+  var MAX_FILES = 8;
+  var MAX_PDF_SIZE = 50 * 1024 * 1024;
   var MAX_IMAGE_EDGE = 1600;
   var GEN_TIMEOUT_MS = 300000;
   var FILE_WAIT_MS = 180000;
@@ -446,7 +460,7 @@
 
   /* ---------- state ---------- */
   var state = {
-    images: [],
+    files: [],   /* 제품 소구점 첨부: kind 'image' | 'pdf' */
     video: null,
     captionOn: false,
     length: '20',
@@ -455,7 +469,7 @@
   };
   var busy = false;
   var lastResult = null;
-  var imgWorking = 0;
+  var fileWorking = 0;
 
   /* ---------- dom ---------- */
   function $(id) { return document.getElementById(id); }
@@ -468,6 +482,7 @@
   var imageDrop = $('imageDrop');
   var imageInput = $('imageInput');
   var thumbsEl = $('thumbs');
+  var pdfListEl = $('pdfList');
   var imgCountEl = $('imgCount');
   var productTextEl = $('productText');
   var textCountEl = $('textCount');
@@ -636,6 +651,42 @@
     });
   }
 
+  /* ---------- product files (images + pdf) ---------- */
+  function b64lenOf(bytes) { return Math.ceil(bytes / 3) * 4; }
+
+  function isPdfFile(file) {
+    if (!file) return false;
+    if (file.type === 'application/pdf') return true;
+    if (file.type && file.type.indexOf('image/') === 0) return false;
+    return /\.pdf$/i.test(file.name || '');
+  }
+
+  async function prepPdf(file) {
+    var name = file.name || 'document.pdf';
+    if (!file.size) throw new AppError(name + ' — 빈 파일이에요. 다른 PDF로 다시 올려주세요.');
+    if (file.size > MAX_PDF_SIZE) {
+      throw new AppError(name + ' — PDF가 너무 커요(' + fmtSize(MAX_PDF_SIZE) + ' 이하 PDF를 써 주세요).');
+    }
+    try {
+      var head = await file.slice(0, 5).arrayBuffer();
+      var sig = String.fromCharCode.apply(null, new Uint8Array(head));
+      if (sig.indexOf('%PDF') !== 0) throw new AppError(name + ' — PDF 파일이 아니에요. 다른 파일로 다시 올려주세요.');
+    } catch (e) {
+      if (e instanceof AppError) throw e;
+      /* 파일 일부를 읽지 못해도 나머지 검사는 계속한다 */
+    }
+    return {
+      id: 'p' + Math.random().toString(36).slice(2, 9),
+      kind: 'pdf',
+      name: name,
+      mime: 'application/pdf',
+      size: file.size,
+      file: file,
+      base64: null,
+      fileInfo: null
+    };
+  }
+
   /* ---------- images ---------- */
   async function prepImage(file) {
     var name = file.name || 'image';
@@ -692,46 +743,69 @@
     if (!base64) throw new AppError(name + ' — 이미지를 읽지 못했어요.');
     return {
       id: 'i' + Math.random().toString(36).slice(2, 9),
+      kind: 'image',
       name: name,
       mime: mime,
       base64: base64,
-      dataUrl: dataUrl
+      dataUrl: dataUrl,
+      size: file.size
     };
   }
 
-  async function addImages(files) {
+  async function addFiles(files) {
     var list = files.filter(function (f) {
       if (!f) return false;
+      if (isPdfFile(f)) return true;
       if (f.type && f.type.indexOf('image/') === 0) return true;
-      return /\.(png|jpe?g|webp|heic|heif)$/i.test(f.name || '');
+      return /\.(png|jpe?g|webp|heic|heif|pdf)$/i.test(f.name || '');
     });
-    if (!list.length) { toast('이미지 파일을 골라주세요'); return; }
-    var room = MAX_IMAGES - state.images.length;
-    if (room <= 0) { toast('이미지는 최대 ' + MAX_IMAGES + '장까지예요'); return; }
+    if (!list.length) { toast('이미지 또는 PDF 파일을 골라주세요'); return; }
+    var room = MAX_FILES - state.files.length;
+    if (room <= 0) { toast('이미지·PDF 합쳐 최대 ' + MAX_FILES + '개까지예요'); return; }
     if (list.length > room) {
       list = list.slice(0, room);
-      toast('이미지는 최대 ' + MAX_IMAGES + '장까지라 ' + room + '장만 넣었어요');
+      toast('이미지·PDF 합쳐 최대 ' + MAX_FILES + '개까지라 ' + room + '개만 넣었어요');
     }
     var errors = [];
-    imgWorking += list.length;
-    imgCountEl.textContent = '불러오는 중…';
+    fileWorking += list.length;
+    updateFileCount();
     for (var i = 0; i < list.length; i++) {
       try {
-        var item = await prepImage(list[i]);
-        state.images.push(item);
-        renderThumbs();
+        var item = isPdfFile(list[i]) ? await prepPdf(list[i]) : await prepImage(list[i]);
+        state.files.push(item);
+        renderFiles();
       } catch (err) {
-        errors.push(err && err.message ? err.message : '이미지를 처리하지 못했어요.');
+        errors.push(err && err.message ? err.message : '파일을 처리하지 못했어요.');
       }
-      imgWorking -= 1;
+      fileWorking -= 1;
+      updateFileCount();
     }
-    renderThumbs();
+    renderFiles();
     if (errors.length) showAlert(errors.join('\n'));
   }
 
-  function renderThumbs() {
+  function updateFileCount() {
+    var nI = 0, nP = 0;
+    state.files.forEach(function (f) {
+      if (f.kind === 'pdf') nP += 1; else nI += 1;
+    });
+    if (fileWorking > 0) { imgCountEl.textContent = '불러오는 중…'; return; }
+    var bits = [];
+    if (nI) bits.push(nI + '장');
+    if (nP) bits.push('PDF ' + nP + '개');
+    imgCountEl.textContent = bits.length ? bits.join(' · ') : '0개';
+  }
+
+  function removeFile(id) {
+    state.files = state.files.filter(function (o) { return o.id !== id; });
+    renderFiles();
+  }
+
+  function renderFiles() {
+    /* 이미지 썸네일 */
+    var imgs = state.files.filter(function (f) { return f.kind === 'image'; });
     thumbsEl.innerHTML = '';
-    state.images.forEach(function (im, idx) {
+    imgs.forEach(function (im, idx) {
       var box = document.createElement('div');
       box.className = 'thumb';
       var img = document.createElement('img');
@@ -744,15 +818,56 @@
       x.textContent = '✕';
       x.addEventListener('click', function (ev) {
         ev.stopPropagation();
-        state.images = state.images.filter(function (o) { return o.id !== im.id; });
-        renderThumbs();
+        removeFile(im.id);
       });
       box.appendChild(img);
       box.appendChild(x);
       thumbsEl.appendChild(box);
     });
-    thumbsEl.hidden = state.images.length === 0;
-    imgCountEl.textContent = imgWorking > 0 ? '불러오는 중…' : (state.images.length + '장');
+    thumbsEl.hidden = imgs.length === 0;
+
+    /* PDF 목록 */
+    var pdfs = state.files.filter(function (f) { return f.kind === 'pdf'; });
+    pdfListEl.innerHTML = '';
+    pdfs.forEach(function (p) {
+      var row = document.createElement('div');
+      row.className = 'pdf-item';
+
+      var badge = document.createElement('span');
+      badge.className = 'pdf-badge';
+      badge.setAttribute('aria-hidden', 'true');
+      badge.textContent = 'PDF';
+
+      var body = document.createElement('div');
+      body.className = 'pdf-body';
+      var nm = document.createElement('div');
+      nm.className = 'pdf-name';
+      nm.textContent = p.name;
+      nm.title = p.name;
+      var sz = document.createElement('div');
+      sz.className = 'pdf-size';
+      sz.textContent = 'PDF · ' + fmtSize(p.size);
+      body.appendChild(nm);
+      body.appendChild(sz);
+
+      var x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'pdf-x';
+      x.setAttribute('aria-label', 'PDF 삭제');
+      x.textContent = '✕';
+      x.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        removeFile(p.id);
+      });
+
+      row.appendChild(badge);
+      row.appendChild(body);
+      row.appendChild(x);
+      pdfListEl.appendChild(row);
+    });
+    pdfListEl.hidden = pdfs.length === 0;
+
+    updateFileCount();
   }
 
   /* ---------- video ---------- */
@@ -854,11 +969,11 @@
     if (status === 403) return '이 API 키로는 요청이 거부됐어요. 키 제한 설정을 확인하거나 새 키를 만들어 주세요.';
     if (status === 404) return '선택한 모델을 찾을 수 없어요. 모델을 gemini-2.5-flash로 바꿔 다시 시도해 주세요.';
     if (status === 429) return '무료 사용량(할당량)을 다 썼어요. 잠시 뒤에 다시 시도하거나 AI Studio에서 사용량을 확인해 주세요.';
-    if (status === 413) return '요청이 너무 커요. 이미지 수를 줄이거나 더 짧은 영상을 써 주세요.';
+    if (status === 413) return '요청이 너무 커요. 이미지·PDF 수를 줄이거나 더 짧은 영상을 써 주세요.';
     if (status >= 500) return 'Gemini 서버가 잠시 혼잡해요. 1~2분 뒤 다시 시도해 주세요.';
     var tail = d ? ' (' + d.slice(0, 160) + ')' : '';
     if (/token count|too many tokens|exceeds the maximum|input is too long/i.test(d)) {
-      return '영상이나 이미지가 너무 길거나 많아 대본을 만드려면 한도가 넘어요. 더 짧은 영상을 쓰거나 이미지 수를 줄여 주세요.';
+      return '영상이나 이미지·PDF가 너무 길거나 많아 대본을 만드려면 한도가 넘어요. 더 짧은 영상을 쓰거나 첨부 수를 줄여 주세요.';
     }
     return '요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.' + tail;
   }
@@ -879,19 +994,25 @@
     L.push('너는 한국 뷰티 크리에이터와 일하는 인스타그램 릴스 대본 작가다. 아래 자료를 분석해, 실제로 소리 내어 읽으면 바로 녹음할 수 있는 한국어 나레이션 대본을 쓴다.');
     L.push('');
     L.push('[1] 자료 분석 — 대본을 쓰기 전에 먼저');
-    if (state.images.length) {
-      L.push('- 첨부한 제품 소구점 이미지 ' + state.images.length + '장을 모두 읽고, 제품명 / 핵심 성분·기능·사용감 / 프로모션·할인 / 필수 표기(계정 태그, 해시태그, 주의 문구)를 빠짐없이 뽑아낸다. 이미지 안의 작은 글씨와 표도 읽는다.');
+    var imgN = state.files.filter(function (f) { return f.kind === 'image'; }).length;
+    var pdfN = state.files.filter(function (f) { return f.kind === 'pdf'; }).length;
+    if (imgN) {
+      L.push('- 첨부한 제품 소구점 이미지 ' + imgN + '장을 모두 읽고, 제품명 / 핵심 성분·기능·사용감 / 프로모션·할인 / 필수 표기(계정 태그, 해시태그, 주의 문구)를 빠짐없이 뽑아낸다. 이미지 안의 작은 글씨와 표도 읽는다.');
+    }
+    if (pdfN) {
+      L.push('- 첨부한 제품 소구점 PDF 문서 ' + pdfN + '개를 처음부터 끝까지 모두 읽고, 제품명 / 핵심 성분·기능·사용감 / 프로모션·할인 / 필수 표기(계정 태그, 해시태그, 주의 문구) / 브랜드 가이드라인(금지 표현·톤)을 빠짐없이 뽑아낸다. 표, 작은 글씨, 각주, 유의사항까지 읽는다.');
+      L.push('- PDF의 브랜드 가이드라인·금지 표현 지침은 대본과 캡션에 반드시 지킨다. 문서에 적힌 필수 태그·해시태그는 빠뜨리지 않는다.');
     }
     if (state.video) {
       L.push('- 첨부한 레퍼런스 영상을 실제로 보고 ① 첫 3초 훅 방식 ② 컷 전환 간격과 템포 ③ 자막의 위치와 길이 ④ 말투와 말 속도 ⑤ 반복 리듬을 분석한다. 그 리듬에 대본의 호흡을 맞춘다.');
     }
-    if (!state.images.length && !state.video) {
+    if (!imgN && !pdfN && !state.video) {
       L.push('- 첨부 자료가 텍스트뿐이다. 텍스트만으로 제품과 타깃을 추론하고, 없는 정보는 만들지 않는다.');
     }
     L.push('- 브리프에 없는 사실(가격, 할인율, 성분 수치, 판매 순위, 임상 결과, 효능)은 절대 만들어내지 않는다. 숫자와 고유명사는 적힌 그대로만 쓴다.');
     L.push('');
     L.push('[2] 제품 브리프 (텍스트)');
-    L.push(productTextEl.value.trim() || '(텍스트 없음 — 첨부 이미지에서 읽어서 반영)');
+    L.push(productTextEl.value.trim() || '(텍스트 없음 — 첨부 이미지·PDF에서 읽어서 반영)');
     var note = refNoteEl.value.trim();
     if (note) {
       L.push('');
@@ -944,11 +1065,11 @@
     return { type: 'object', properties: props, required: required };
   }
 
-  /* ---------- video upload (Files API) ---------- */
-  async function uploadVideoMultipart(key, file, mime, onStatus) {
-    onStatus('영상을 Gemini에 업로드하는 중…');
+  /* ---------- big file upload (Files API) — 영상·PDF 공용 ---------- */
+  async function uploadMultipart(key, file, mime, label, onStatus) {
+    onStatus(label + '를 Gemini에 업로드하는 중…');
     var fd = new FormData();
-    var meta = JSON.stringify({ file: { display_name: (file.name || 'reference-video').slice(0, 90) } });
+    var meta = JSON.stringify({ file: { display_name: (file.name || ('attachment-' + label)).slice(0, 90) } });
     fd.append('metadata', new Blob([meta], { type: 'application/json' }));
     fd.append('file', file);
     var res = await fetch(UPLOAD_START, {
@@ -958,12 +1079,12 @@
     });
     if (!res.ok) throw await toApiError(res);
     var j = await res.json();
-    if (!j || !j.file || !j.file.name) throw new AppError('영상 업로드가 완료되지 않았어요. 다시 시도해 주세요.');
+    if (!j || !j.file || !j.file.name) throw new AppError(label + ' 업로드가 완료되지 않았어요. 다시 시도해 주세요.');
     return j.file;
   }
 
-  async function uploadVideoFile(key, file, mime, onStatus) {
-    onStatus('영상을 Gemini에 업로드하는 중…');
+  async function uploadBigFile(key, file, mime, label, onStatus) {
+    onStatus(label + '를 Gemini에 업로드하는 중…');
     var startRes = await fetch(UPLOAD_START, {
       method: 'POST',
       headers: {
@@ -974,11 +1095,11 @@
         'X-Goog-Upload-Header-Content-Type': mime,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ file: { display_name: (file.name || 'reference-video').slice(0, 90) } })
+      body: JSON.stringify({ file: { display_name: (file.name || ('attachment-' + label)).slice(0, 90) } })
     });
     if (!startRes.ok) throw await toApiError(startRes);
     var uploadUrl = startRes.headers.get('x-goog-upload-url');
-    if (!uploadUrl) return uploadVideoMultipart(key, file, mime, onStatus);
+    if (!uploadUrl) return uploadMultipart(key, file, mime, label, onStatus);
 
     var fileObj = await new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
@@ -988,7 +1109,7 @@
       xhr.upload.onprogress = function (e) {
         if (e.lengthComputable && e.total) {
           var pct = Math.min(99, Math.round((e.loaded / e.total) * 100));
-          onStatus('영상 업로드 중… ' + pct + '%');
+          onStatus(label + ' 업로드 중… ' + pct + '%');
         }
       };
       xhr.onload = function () {
@@ -996,9 +1117,9 @@
           try {
             var j = JSON.parse(xhr.responseText);
             if (j && j.file) resolve(j.file);
-            else reject(new AppError('영상 업로드 응답을 읽지 못했어요. 다시 시도해 주세요.'));
+            else reject(new AppError(label + ' 업로드 응답을 읽지 못했어요. 다시 시도해 주세요.'));
           } catch (e) {
-            reject(new AppError('영상 업로드 응답을 읽지 못했어요. 다시 시도해 주세요.'));
+            reject(new AppError(label + ' 업로드 응답을 읽지 못했어요. 다시 시도해 주세요.'));
           }
         } else {
           var detail = '';
@@ -1007,19 +1128,20 @@
         }
       };
       xhr.onerror = function () {
-        reject(new AppError('영상 업로드에 실패했어요. 네트워크 연결을 확인하고 다시 시도해 주세요.'));
+        reject(new AppError(label + ' 업로드에 실패했어요. 네트워크 연결을 확인하고 다시 시도해 주세요.'));
       };
       xhr.ontimeout = function () {
-        reject(new AppError('영상 업로드가 시간 초과로 중단됐어요. 더 짧은 영상으로 시도해 주세요.'));
+        reject(new AppError(label + ' 업로드가 시간 초과로 중단됐어요. 더 작은 파일로 시도해 주세요.'));
       };
       xhr.send(file);
     });
 
-    if (!fileObj || !fileObj.name) throw new AppError('영상 업로드가 완료되지 않았어요. 다시 시도해 주세요.');
+    if (!fileObj || !fileObj.name) throw new AppError(label + ' 업로드가 완료되지 않았어요. 다시 시도해 주세요.');
     return fileObj;
   }
 
-  async function waitForFileActive(key, fileName, onStatus) {
+  async function waitForFileActive(key, fileName, onStatus, label) {
+    var who = label || '파일';
     var url = API_BASE + '/' + fileName;
     var started = Date.now();
     while (Date.now() - started < FILE_WAIT_MS) {
@@ -1028,41 +1150,86 @@
       var j = await res.json();
       var st = (j && j.state) || 'PROCESSING';
       if (st === 'ACTIVE') return j;
-      if (st === 'FAILED') throw new AppError('Gemini가 영상 처리에 실패했어요. MP4로 변환해 다시 올려주세요.');
+      if (st === 'FAILED') {
+        throw new AppError(who === 'PDF'
+          ? 'Gemini가 PDF를 읽지 못했어요. 암호가 걸렸거나 손상된 PDF면 다시 저장해 올려주세요.'
+          : 'Gemini가 영상 처리에 실패했어요. MP4로 변환해 다시 올려주세요.');
+      }
       var sec = Math.max(1, Math.round((Date.now() - started) / 1000));
-      onStatus('Gemini가 영상을 읽는 중… (' + sec + '초)');
+      onStatus('Gemini가 ' + who + '를 읽는 중… (' + sec + '초)');
       await sleep(2500);
     }
-    throw new AppError('영상 준비가 3분 안에 끝나지 않았어요. 조금 더 짧은 영상으로 다시 시도해 주세요.');
+    throw new AppError(who + ' 준비가 3분 안에 끝나지 않았어요. 더 작은 파일로 다시 시도해 주세요.');
   }
 
   /* ---------- build request ---------- */
+  /* 인라인(base64)으로 보낼 수 있는 것은 19MB 예산 안에서 작은 것부터 채우고,
+     남는 것은 Gemini Files API로 올린다. 영상과 PDF가 같은 규칙을 쓴다. */
+  function planInline() {
+    var plan = {};
+    var budget = INLINE_TOTAL_LIMIT;
+    state.files.forEach(function (f) {
+      if (f.kind === 'image') budget -= f.base64.length;
+    });
+    var cands = [];
+    if (state.video) cands.push({ id: 'video', b64: b64lenOf(state.video.size), max: INLINE_VIDEO_LIMIT });
+    state.files.forEach(function (f) {
+      if (f.kind === 'pdf') cands.push({ id: f.id, b64: b64lenOf(f.size), max: INLINE_TOTAL_LIMIT });
+    });
+    cands.sort(function (a, b) { return a.b64 - b.b64; });
+    cands.forEach(function (c) {
+      if (c.b64 <= c.max && c.b64 <= budget) { plan[c.id] = true; budget -= c.b64; }
+      else plan[c.id] = false;
+    });
+    return plan;
+  }
+
   async function buildParts(key, promptText, onStatus) {
     var parts = [];
-    state.images.forEach(function (im) {
-      parts.push({ inlineData: { mimeType: im.mime, data: im.base64 } });
-    });
+    var inlinePlan = planInline();
+
+    for (var i = 0; i < state.files.length; i++) {
+      var f = state.files[i];
+      if (f.kind === 'image') {
+        parts.push({ inlineData: { mimeType: f.mime, data: f.base64 } });
+        continue;
+      }
+      if (inlinePlan[f.id]) {
+        if (!f.base64) {
+          onStatus('PDF를 준비하는 중…');
+          var d = await readAsDataURL(f.file);
+          f.base64 = d.indexOf(',') > -1 ? d.split(',')[1] : '';
+          if (!f.base64) throw new AppError(f.name + ' — PDF를 읽지 못했어요. 다시 선택해 주세요.');
+        }
+        parts.push({ inlineData: { mimeType: 'application/pdf', data: f.base64 } });
+      } else {
+        if (!f.fileInfo) f.fileInfo = await uploadBigFile(key, f.file, 'application/pdf', 'PDF', onStatus);
+        if (!f.fileActive) {
+          onStatus('Gemini가 PDF를 읽는 중…');
+          await waitForFileActive(key, f.fileInfo.name, onStatus, 'PDF');
+          f.fileActive = true;
+        }
+        parts.push({ fileData: { mimeType: 'application/pdf', fileUri: f.fileInfo.uri || (API_BASE + '/' + f.fileInfo.name) } });
+      }
+    }
 
     var v = state.video;
     if (v) {
-      var b64len = Math.ceil(v.size / 3) * 4;
-      var imgLen = state.images.reduce(function (a, im) { return a + im.base64.length; }, 0);
-      var canInline = v.size <= INLINE_VIDEO_LIMIT && (b64len + imgLen) <= INLINE_TOTAL_LIMIT;
-
-      if (canInline) {
+      if (inlinePlan['video']) {
         if (!v.base64) {
           onStatus('영상을 준비하는 중…');
-          var d = await readAsDataURL(v.file);
-          v.base64 = d.indexOf(',') > -1 ? d.split(',')[1] : '';
+          var dv = await readAsDataURL(v.file);
+          v.base64 = dv.indexOf(',') > -1 ? dv.split(',')[1] : '';
           if (!v.base64) throw new AppError('영상을 읽지 못했어요. 다시 선택해 주세요.');
         }
         parts.push({ inlineData: { mimeType: v.mime, data: v.base64 } });
       } else {
-        if (!v.fileInfo) {
-          v.fileInfo = await uploadVideoFile(key, v.file, v.mime, onStatus);
+        if (!v.fileInfo) v.fileInfo = await uploadBigFile(key, v.file, v.mime, '영상', onStatus);
+        if (!v.fileActive) {
+          onStatus('Gemini가 영상을 읽는 중…');
+          await waitForFileActive(key, v.fileInfo.name, onStatus, '영상');
+          v.fileActive = true;
         }
-        onStatus('Gemini가 영상을 읽는 중…');
-        await waitForFileActive(key, v.fileInfo.name, onStatus);
         var uri = v.fileInfo.uri || (API_BASE + '/' + v.fileInfo.name);
         parts.push({ fileData: { mimeType: v.mime, fileUri: uri } });
       }
@@ -1207,8 +1374,8 @@
       return;
     }
     var hasText = productTextEl.value.trim().length > 0;
-    if (!state.images.length && !hasText && !state.video) {
-      showAlert('제품 소구점 이미지나 텍스트 중 하나는 넣어주세요. (레퍼런스 영상만으로는 대본을 쓰기 어려워요)');
+    if (!state.files.length && !hasText && !state.video) {
+      showAlert('제품 소구점 이미지·PDF나 텍스트 중 하나는 넣어주세요. (레퍼런스 영상만으로는 대본을 쓰기 어려워요)');
       return;
     }
     apiCard.open = false;
@@ -1303,7 +1470,7 @@
   });
   modelEl.addEventListener('change', function () { LSset(K.model, modelEl.value); });
 
-  wireDrop(imageDrop, imageInput, addImages);
+  wireDrop(imageDrop, imageInput, addFiles);
   wireDrop(videoDrop, videoInput, function (files) { if (files[0]) setVideo(files[0]); });
 
   videoEl.addEventListener('error', function () {
