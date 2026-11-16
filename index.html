@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#FFF8F5" />
+<meta name="description" content="제품 소구점 이미지·텍스트와 레퍼런스 영상으로 뷰티 릴스 나레이션 대본을 만드는 도구" />
+<title>릴스 대본 스튜디오</title>
+<style>
+  :root{
+    --bg:#FFF8F5;
+    --bg-soft:#FBF1ED;
+    --card:#FFFFFF;
+    --seg-on:#FFFFFF;
+    --input-bg:#FFFCFB;
+    --line:#F2E3DD;
+    --line-2:#E9D6CF;
+    --ink:#231A1E;
+    --ink-2:#5B4C52;
+    --ink-3:#8E7F86;
+    --accent:#F4436F;
+    --accent-ink:#C11A47;
+    --accent-soft:#FFE9EF;
+    --btn-bg:#261A20;
+    --btn-fg:#FFFFFF;
+    --warn:#B4571B;
+    --radius:18px;
+    --shadow:0 1px 2px rgba(60,30,40,.04), 0 10px 26px -14px rgba(60,30,40,.22);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#151012;
+      --bg-soft:#191316;
+      --card:#201A1D;
+      --seg-on:#2B2226;
+      --input-bg:#1B1518;
+      --line:#2F2429;
+      --line-2:#3C2D32;
+      --ink:#F6EEEF;
+      --ink-2:#C9BABF;
+      --ink-3:#93838A;
+      --accent:#FF6F93;
+      --accent-ink:#FFA3B8;
+      --accent-soft:#3A1F28;
+      --btn-bg:#F3E7EA;
+      --btn-fg:#20171B;
+      --warn:#F0B37E;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -18px rgba(0,0,0,.8);
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none !important}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",system-ui,sans-serif;
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+    padding:0 16px calc(150px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:620px;margin:0 auto}
+
+  /* header */
+  .app-head{padding:26px 2px 16px}
+  .head-top{display:flex;align-items:center;gap:8px}
+  .mark{font-size:20px;line-height:1}
+  .app-head h1{margin:0;font-size:21px;font-weight:800;letter-spacing:-.03em}
+  .app-head .sub{margin:6px 0 0;font-size:13.5px;color:var(--ink-2);line-height:1.5}
+
+  /* cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:0 0 12px}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+  .card-head h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.02em}
+  .count{font-size:12px;font-weight:600;color:var(--ink-3);white-space:nowrap}
+  .field{margin-top:14px}
+  .field:first-child{margin-top:0}
+  .field > label,.seg-label{display:block;font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+  .hint{margin:6px 0 0;font-size:12px;color:var(--ink-3);line-height:1.5}
+  .hint a{color:var(--accent-ink);font-weight:600;text-decoration:none}
+  .hint a:active{opacity:.7}
+
+  /* details / summary */
+  details.card{padding:14px 16px}
+  details > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;font-size:15px;font-weight:700;letter-spacing:-.02em}
+  details > summary::-webkit-details-marker{display:none}
+  details[open] > summary{margin-bottom:12px}
+  details > summary .chev{font-size:14px;color:var(--ink-3);font-weight:600;transition:transform .18s}
+  details[open] > summary .chev{transform:rotate(45deg)}
+  .pill{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--bg-soft);color:var(--ink-3);border:1px solid var(--line)}
+  .pill.ok{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}
+
+  /* inputs */
+  input[type=text],input[type=password],textarea,select{
+    width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--input-bg);
+    border:1.5px solid var(--line-2);border-radius:12px;padding:11px 12px;outline:none;transition:border-color .15s,background .15s;
+    appearance:none;
+  }
+  textarea{resize:vertical;min-height:118px;line-height:1.6}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);background:var(--card)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  select{background-image:none}
+  .key-row{display:flex;gap:6px}
+  .key-row input{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;letter-spacing:.02em}
+  .ghost{appearance:none;flex:0 0 auto;border:1.5px solid var(--line-2);background:transparent;color:var(--ink-2);font:inherit;font-size:13px;font-weight:700;padding:0 13px;border-radius:12px;cursor:pointer;white-space:nowrap;transition:.15s}
+  .ghost:active{background:var(--bg-soft)}
+  .ghost:disabled{opacity:.45}
+
+  /* dropzone */
+  .drop{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:22px 14px;border:1.5px dashed var(--line-2);border-radius:14px;background:var(--bg-soft);cursor:pointer;transition:.15s}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .drop-icon{font-size:22px;line-height:1.2}
+  .drop-main{font-size:14px;font-weight:700;letter-spacing:-.01em}
+  .drop-sub{font-size:12px;color:var(--ink-3)}
+
+  /* thumbs */
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:12px}
+  .thumb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--bg-soft)}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb-x{position:absolute;top:4px;right:4px;width:25px;height:25px;border-radius:50%;border:none;background:rgba(24,14,18,.6);color:#fff;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  .thumb-x:active{background:rgba(24,14,18,.85)}
+
+  /* video */
+  .video-preview{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000}
+  .video-preview video{width:100%;max-height:300px;display:block;background:#000}
+  .video-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--card);border-top:1px solid var(--line)}
+  .video-meta .nm{font-size:12.5px;color:var(--ink-2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .video-meta .ghost{padding:5px 10px;font-size:12px;border-radius:9px}
+  .vnote{margin:8px 0 0;font-size:12px;color:var(--warn)}
+
+  /* segmented */
+  .seg{display:grid;gap:5px;background:var(--bg-soft);padding:4px;border-radius:14px;border:1px solid var(--line)}
+  .seg.seg-2{grid-template-columns:1fr 1fr}
+  .seg.seg-3{grid-template-columns:repeat(3,1fr)}
+  .seg button{appearance:none;border:none;background:transparent;border-radius:11px;padding:9px 4px;font:inherit;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;line-height:1.25;display:flex;flex-direction:column;align-items:center;gap:1px;transition:background .15s,color .15s,box-shadow .15s}
+  .seg button span{font-size:10.5px;font-weight:600;color:var(--ink-3)}
+  .seg button[aria-pressed="true"]{background:var(--seg-on);color:var(--ink);box-shadow:0 1px 3px rgba(60,30,40,.14)}
+  .seg button[aria-pressed="true"] span{color:var(--accent-ink)}
+
+  /* option rows */
+  .rows{display:grid;gap:6px}
+  .opt{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;text-align:left;font:inherit;width:100%;transition:.15s}
+  .opt[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+  .opt-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line-2);flex:0 0 auto;margin-top:2px;position:relative;background:var(--card)}
+  .opt[aria-checked="true"] .opt-dot{border-color:var(--accent);background:var(--accent)}
+  .opt[aria-checked="true"] .opt-dot:after{content:"";position:absolute;inset:4px;border-radius:50%;background:#fff}
+  .opt-body{display:block;min-width:0}
+  .opt-title{display:block;font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+  .opt-sub{display:block;font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:1px}
+
+  /* switch row */
+  .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 0}
+  .switch-row .rt{font-size:14px;font-weight:700;letter-spacing:-.01em}
+  .switch-row .rs{font-size:12px;color:var(--ink-3);margin-top:1px;line-height:1.45}
+  .switch{appearance:none;width:50px;height:30px;border-radius:999px;background:var(--line-2);border:none;position:relative;cursor:pointer;flex:0 0 auto;transition:background .18s;padding:0}
+  .switch .knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.24);transition:transform .18s}
+  .switch[aria-checked="true"]{background:var(--accent)}
+  .switch[aria-checked="true"] .knob{transform:translateX(20px)}
+
+  /* action bar */
+  .actionbar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:8px 16px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(255,248,245,0) 0%,rgba(255,248,245,.86) 28%,var(--bg) 72%);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  @media (prefers-color-scheme: dark){.actionbar{background:linear-gradient(180deg,rgba(21,16,18,0) 0%,rgba(21,16,18,.86) 28%,var(--bg) 72%)}}
+  .actionbar-inner{max-width:620px;margin:0 auto}
+  .status{min-height:0;font-size:12.5px;font-weight:700;color:var(--accent-ink);text-align:center;padding:0 0 6px;word-break:keep-all}
+  .status:empty{display:none}
+  .primary{appearance:none;border:none;width:100%;padding:16px 18px;border-radius:16px;background:linear-gradient(180deg,#FF5C86,#F03A69);color:#fff;font:inherit;font-size:16px;font-weight:800;letter-spacing:-.01em;box-shadow:0 12px 26px -12px rgba(240,58,105,.8);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,opacity .15s}
+  .primary:active{transform:scale(.992)}
+  .primary:disabled{opacity:.6;box-shadow:none;cursor:default}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;animation:spin .7s linear infinite;display:none;flex:0 0 auto}
+  .primary.loading .spinner{display:block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* results */
+  .results{margin-top:4px}
+  .result{padding:16px 16px 14px}
+  .result-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .result-head h2{margin:0;font-size:15px;font-weight:800;letter-spacing:-.02em}
+  .badges{display:flex;gap:5px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--bg-soft);color:var(--ink-2);border:1px solid var(--line);white-space:nowrap}
+  .badge.over{color:var(--warn);border-color:currentColor;background:transparent}
+  .narration{font-size:16.5px;line-height:1.78;white-space:pre-wrap;word-break:keep-all;overflow-wrap:break-word;letter-spacing:-.01em;user-select:text;-webkit-user-select:text}
+  .caption{font-size:14.5px;line-height:1.72;white-space:pre-wrap;word-break:break-word;color:var(--ink-2)}
+  .result-actions{display:flex;gap:8px;margin-top:14px}
+  .copy{appearance:none;border:none;font:inherit;font-size:14px;font-weight:800;padding:11px 18px;border-radius:12px;background:var(--btn-bg);color:var(--btn-fg);cursor:pointer;flex:1 1 auto;transition:.15s}
+  .copy.copied{background:#1F9D6B;color:#fff}
+  .copy:active{opacity:.85}
+  .refine{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2)}
+  .refine-label{display:block;font-size:11.5px;font-weight:700;color:var(--ink-3);margin-bottom:7px}
+  .refine-row{display:flex;gap:6px;flex-wrap:wrap}
+  .refine-row button{appearance:none;flex:1 1 auto;border:1.5px solid var(--line-2);background:transparent;color:var(--ink-2);font:inherit;font-size:13px;font-weight:700;padding:9px 8px;border-radius:11px;cursor:pointer;white-space:nowrap;transition:.15s}
+  .refine-row button:active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+  .refine-row button:disabled{opacity:.45}
+
+  /* alert */
+  .alert{border:1px solid #FFC9D4;background:#FFF1F4;color:#A21634;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.55;margin:0 0 12px;word-break:keep-all}
+  .alert strong{display:block;font-size:13.5px;margin-bottom:2px}
+  .alert a{color:#A21634;font-weight:700}
+  @media (prefers-color-scheme: dark){.alert{border-color:#6B2233;background:#31151D;color:#FFC2CE}.alert a{color:#FFC2CE}}
+
+  /* tips */
+  .tips ul{margin:0;padding-left:18px;font-size:13px;color:var(--ink-2);line-height:1.65}
+  .tips li{margin-bottom:6px}
+  .tips li:last-child{margin-bottom:0}
+  .tips b{color:var(--ink);font-weight:700}
+
+  .toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));transform:translate(-50%,10px);background:rgba(30,20,25,.94);color:#fff;font-size:13px;font-weight:700;padding:9px 15px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;max-width:80vw;text-align:center;word-break:keep-all}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .foot{font-size:11.5px;color:var(--ink-3);text-align:center;padding:6px 0 0;line-height:1.6}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .rise{animation:rise .28s ease both}
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001s !important;transition-duration:.001s !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app-head">
+    <div class="head-top"><span class="mark" aria-hidden="true">🎬</span><h1>릴스 대본 스튜디오</h1></div>
+    <p class="sub">제품 소구점과 레퍼런스 영상만 올리면, 바로 읽을 수 있는 20·30초 뷰티 릴스 나레이션이 나와요.</p>
+  </header>
+
+  <!-- API 설정 -->
+  <details class="card" id="apiCard" open>
+    <summary>
+      <span>Gemini API 키</span>
+      <span style="display:flex;align-items:center;gap:6px"><span class="pill" id="keyPill">미등록</span><span class="chev" aria-hidden="true">+</span></span>
+    </summary>
+    <div class="field">
+      <label for="apiKey">Google AI Studio API 키</label>
+      <div class="key-row">
+        <input id="apiKey" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza..." aria-describedby="keyHint" />
+        <button class="ghost" id="toggleKey" type="button" aria-pressed="false">보기</button>
+      </div>
+      <p class="hint" id="keyHint">키는 이 브라우저(localStorage)에만 저장되고 서버로 보내지 않아요. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">키 발급받기 ↗</a> <button class="ghost" id="clearKey" type="button" style="display:none;border:none;padding:0;background:none;color:var(--accent-ink);font-size:12px;text-decoration:underline">저장된 키 삭제</button></p>
+    </div>
+    <div class="field">
+      <label for="model">모델</label>
+      <select id="model">
+        <option value="gemini-2.5-flash">gemini-2.5-flash · 빠름 (기본)</option>
+        <option value="gemini-2.5-pro">gemini-2.5-pro · 더 정교함 (느림)</option>
+      </select>
+      <p class="hint">키에 'HTTP 리퍼러 제한'이 걸려 있으면 브라우저 호출이 막힐 수 있어요. 제한 없음으로 두면 편해요.</p>
+    </div>
+  </details>
+
+  <!-- 이미지 -->
+  <section class="card">
+    <div class="card-head"><h2>제품 소구점 이미지</h2><span class="count" id="imgCount">0장</span></div>
+    <div class="drop" id="imageDrop" role="button" tabindex="0" aria-label="제품 소구점 이미지 선택">
+      <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" multiple hidden />
+      <div class="drop-icon" aria-hidden="true">🖼️</div>
+      <div class="drop-main">브랜드 브리프·USP 캡처 올리기</div>
+      <div class="drop-sub">PNG · JPG · WEBP / 여러 장 · 끌어다 놓아도 돼요</div>
+    </div>
+    <div class="thumbs" id="thumbs" hidden></div>
+  </section>
+
+  <!-- 텍스트 -->
+  <section class="card">
+    <div class="card-head"><h2>제품 소구점 텍스트</h2><span class="count" id="textCount">0자</span></div>
+    <textarea id="productText" placeholder="예)&#10;제품: 코스알엑스 블루 펩타이드 세럼 50ml&#10;소구점: 고함량 블루 펩타이드, 바쿠치올, 저자극, 산뜻쫀쫀 안 밀림&#10;프로모션: 올리브영 44% 할인 40,900원 + 겔마스크 2장&#10;필수 태그: @cosrx_korea #코스알엑스"></textarea>
+    <p class="hint">이미지에 적힌 내용도 같이 읽어요. 이미지가 없으면 여기만 채워도 돼요.</p>
+  </section>
+
+  <!-- 레퍼런스 영상 -->
+  <section class="card">
+    <div class="card-head"><h2>레퍼런스 영상</h2><span class="count" id="videoCount">선택 안 함</span></div>
+    <div class="drop" id="videoDrop" role="button" tabindex="0" aria-label="레퍼런스 영상 선택">
+      <input id="videoInput" type="file" accept="video/*" hidden />
+      <div class="drop-icon" aria-hidden="true">📱</div>
+      <div class="drop-main">릴스 캡처·MP4 올리기</div>
+      <div class="drop-sub">MP4 · MOV · WEBM / 큰 영상은 자동 업로드</div>
+    </div>
+    <div class="video-preview" id="videoPreview" hidden>
+      <video id="videoEl" controls playsinline muted preload="metadata"></video>
+      <div class="video-meta">
+        <span class="nm" id="videoName"></span>
+        <button class="ghost" id="removeVideo" type="button">삭제</button>
+      </div>
+    </div>
+    <p class="vnote" id="videoNote" hidden></p>
+    <div class="field">
+      <label for="refNote">레퍼런스 메모 (선택)</label>
+      <input id="refNote" type="text" placeholder="예) 30초 빠른 템포, 상단 짧은 펀치라인 자막, 첫 3초 훅 강함" />
+    </div>
+  </section>
+
+  <!-- 옵션 -->
+  <section class="card">
+    <div class="card-head"><h2>생성 옵션</h2></div>
+
+    <div class="switch-row">
+      <div>
+        <div class="rt">인스타 캡션도 함께</div>
+        <div class="rs">해시태그 포함 캡션을 같이 만들어요</div>
+      </div>
+      <button class="switch" id="captionSwitch" type="button" role="switch" aria-checked="false" aria-label="캡션 작성 여부"><span class="knob"></span></button>
+    </div>
+
+    <div class="field">
+      <div class="seg-label">나레이션 길이</div>
+      <div class="seg seg-2" id="lenSeg" role="radiogroup" aria-label="나레이션 길이">
+        <button type="button" data-value="20" aria-pressed="true">20초 콤팩트<span>180~220자</span></button>
+        <button type="button" data-value="30" aria-pressed="false">30초 표준<span>280~320자</span></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="seg-label">밈 강도</div>
+      <div class="seg seg-3" id="memeSeg" role="radiogroup" aria-label="밈 강도">
+        <button type="button" data-value="low" aria-pressed="false">약<span>담백</span></button>
+        <button type="button" data-value="mid" aria-pressed="false">중<span>트렌디</span></button>
+        <button type="button" data-value="high" aria-pressed="true">강<span>풀밈·드립</span></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="seg-label">후킹 스타일</div>
+      <div class="rows" id="hookRows" role="radiogroup" aria-label="후킹 스타일">
+        <button class="opt" type="button" role="radio" data-value="fresh" aria-checked="true">
+          <span class="opt-dot" aria-hidden="true"></span>
+          <span class="opt-body"><span class="opt-title">레퍼런스와 다르게</span><span class="opt-sub">새로운 각도로 후킹을 새로 만들어요</span></span>
+        </button>
+        <button class="opt" type="button" role="radio" data-value="keep" aria-checked="false">
+          <span class="opt-dot" aria-hidden="true"></span>
+          <span class="opt-body"><span class="opt-title">레퍼런스 느낌 살려서</span><span class="opt-sub">리듬·톤은 유지, 대사는 새로</span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="extraInput">추가 요청사항 (선택)</label>
+      <input id="extraInput" type="text" placeholder="예) 더 짧게, 2위 성분 강조, 마지막에 할인 멘트" />
+    </div>
+  </section>
+
+  <div id="alertBox"></div>
+
+  <!-- 결과 -->
+  <section class="results" id="results" hidden aria-live="polite">
+    <article class="card result rise" id="narrationCard">
+      <div class="result-head">
+        <h2>나레이션 대본</h2>
+        <div class="badges">
+          <span class="badge" id="charBadge">0자</span>
+          <span class="badge" id="secBadge">약 20초</span>
+        </div>
+      </div>
+      <div class="narration" id="narrationText"></div>
+      <div class="result-actions">
+        <button class="copy" id="copyNarration" type="button">복사하기</button>
+        <button class="ghost" id="regenBtn" type="button" style="padding:0 14px">다시 생성</button>
+      </div>
+      <div class="refine">
+        <span class="refine-label">빠른 다듬기</span>
+        <div class="refine-row">
+          <button type="button" data-refine="shorter">더 짧게</button>
+          <button type="button" data-refine="meme">밈 더 세게</button>
+          <button type="button" data-refine="hook">후킹만 다르게</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="card result rise" id="captionCard" hidden>
+      <div class="result-head">
+        <h2>인스타 캡션</h2>
+        <span class="badge">해시태그 포함</span>
+      </div>
+      <div class="caption" id="captionText"></div>
+      <div class="result-actions">
+        <button class="copy" id="copyCaption" type="button">복사하기</button>
+      </div>
+    </article>
+  </section>
+
+  <details class="card tips">
+    <summary><span>사용 팁</span><span class="chev" aria-hidden="true">+</span></summary>
+    <ul>
+      <li>레퍼런스는 인스타 릴스를 <b>화면 기록</b>하거나 저장한 파일을 그대로 올리면 돼요. 3~60초면 충분해요.</li>
+      <li>작은 영상은 바로 분석하고, 큰 영상은 Gemini에 자동 업로드한 뒤 분석해요(진행률 표시). 1분 이내 영상이면 충분해요.</li>
+      <li>영상이 없어도 이미지·텍스트만으로 대본을 만들 수 있어요. 영상이 있으면 컷 템포와 말투까지 맞춰요.</li>
+      <li>마음에 안 들면 <b>빠른 다듬기</b>로 한 번에 다듬는 게 새로 뽑는 것보다 빨라요.</li>
+      <li>API 키는 이 브라우저에만 저장돼요. 다른 기기에서는 한 번 더 넣어주세요.</li>
+    </ul>
+  </details>
+
+  <p class="foot">결과는 참고용 초안이에요. 가격·효능·필수 표기는 올리기 전에 꼭 한 번 확인해 주세요.</p>
+</div>
+
+<div class="actionbar">
+  <div class="actionbar-inner">
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+    <button class="primary" id="generateBtn" type="button">
+      <span class="spinner" aria-hidden="true"></span>
+      <span id="generateLabel">대본 만들기</span>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- constants ---------- */
+  var API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+  var UPLOAD_START = 'https://generativelanguage.googleapis.com/upload/v1beta/files';
+  var INLINE_VIDEO_LIMIT = 18 * 1024 * 1024;
+  var INLINE_TOTAL_LIMIT = 19 * 1024 * 1024;
+  var MAX_IMAGES = 8;
+  var MAX_IMAGE_EDGE = 1600;
+  var GEN_TIMEOUT_MS = 300000;
+  var FILE_WAIT_MS = 180000;
+
+  var K = { key: 'reels.gemini.key', model: 'reels.gemini.model', opts: 'reels.gemini.opts' };
+
+  var LEN_SPEC = {
+    '20': {
+      label: '20초 콤팩트',
+      chars: '180~220자',
+      pace: '후킹 1문장 → 소구점 2~3개 → 프로모션 1문장. 문장은 8~14자로 짧게 끊고, 한 문장에 한 정보만.'
+    },
+    '30': {
+      label: '30초 표준',
+      chars: '280~320자',
+      pace: '후킹 1~2문장 → 소구점 3~4개 → 사용감·상황 묘사 1~2문장 → 프로모션 마무리. 정보는 늘리되 호흡은 계속 짧게.'
+    }
+  };
+
+  var MEME_SPEC = {
+    low: '약(담백) — 유행 밈은 0~1개. 차분하고 정확한 존댓말. 과장·드립·반말 리액션은 넣지 않는다.',
+    mid: '중(트렌디) — 요즘 릴스에서 쓰는 표현을 2~3개 자연스럽게. "요즘 이거 왜 이제 알았지", "이건 좀 신기함" 정도의 가벼운 리액션과 공감 대화법. 억지 유행어는 금지.',
+    high: '강(풀밈·드립) — 한국 인스타 릴스에서 실제로 도는 밈·드립·과장 비유를 적극 사용. 예: "말이 안 됨", "이건 유죄임", "못 참지", "폼 미쳤다", "솔직히", "이거 하나로 끝", "안 사면 손해" 식의 가벼운 압박, 상황 고발형 드립, 자기 말에 태클 걸기. 비속어·혐오·외모 비하·특정인 조롱은 금지. 효능 과장은 금지하고, 과장은 오직 유머로만.'
+  };
+
+  var HOOK_SPEC = {
+    fresh: '레퍼런스와 다르게 — 레퍼런스 영상의 첫 문장, 첫 3초 구성, 카피를 그대로 쓰지 않는다. 완전히 다른 각도로 새 후킹을 만든다(통념 부수기 / 구체적 상황 고발 / 결과 먼저 보여주기 / 의외의 비교 / 질문 던지기 중에서 고른다). 레퍼런스의 템포·편집 리듬·영상 톤은 참고한다.',
+    keep: '레퍼런스 느낌 살려서 — 레퍼런스 영상의 리듬·톤·전개 방식을 유지한다. 단, 대사는 그대로 베끼지 말고 이 제품에 맞게 새로 쓴다.'
+  };
+
+  var REFINE = {
+    shorter: '지금보다 15~20% 더 짧게. 문장 수를 줄이고 군더더기를 덜어낸다. 제품명과 필수 소구점·프로모션 정보는 모두 유지한다.',
+    meme: '밈·드립 강도를 한 단계 더 올린다. 요즘 릴스에서 실제로 쓰는 반말 리액션과 과장 비유를 더 넣되, 필수 정보와 제품명은 그대로 유지한다.',
+    hook: '첫 문장(첫 3초)의 후킹만 완전히 다른 각도로 새로 쓴다. 본문과 프로모션 마무리는 유지하되 자연스럽게 이어지게 다듬는다.'
+  };
+
+  /* ---------- state ---------- */
+  var state = {
+    images: [],
+    video: null,
+    captionOn: false,
+    length: '20',
+    meme: 'high',
+    hook: 'fresh'
+  };
+  var busy = false;
+  var lastResult = null;
+  var imgWorking = 0;
+
+  /* ---------- dom ---------- */
+  function $(id) { return document.getElementById(id); }
+  var apiCard = $('apiCard');
+  var apiKeyEl = $('apiKey');
+  var toggleKeyBtn = $('toggleKey');
+  var clearKeyBtn = $('clearKey');
+  var keyPill = $('keyPill');
+  var modelEl = $('model');
+  var imageDrop = $('imageDrop');
+  var imageInput = $('imageInput');
+  var thumbsEl = $('thumbs');
+  var imgCountEl = $('imgCount');
+  var productTextEl = $('productText');
+  var textCountEl = $('textCount');
+  var videoDrop = $('videoDrop');
+  var videoInput = $('videoInput');
+  var videoPreview = $('videoPreview');
+  var videoEl = $('videoEl');
+  var videoNameEl = $('videoName');
+  var videoCountEl = $('videoCount');
+  var videoNoteEl = $('videoNote');
+  var removeVideoBtn = $('removeVideo');
+  var refNoteEl = $('refNote');
+  var captionSwitch = $('captionSwitch');
+  var lenSeg = $('lenSeg');
+  var memeSeg = $('memeSeg');
+  var hookRows = $('hookRows');
+  var extraInput = $('extraInput');
+  var resultsEl = $('results');
+  var alertBox = $('alertBox');
+  var narrationCard = $('narrationCard');
+  var narrationText = $('narrationText');
+  var charBadge = $('charBadge');
+  var secBadge = $('secBadge');
+  var captionCard = $('captionCard');
+  var captionText = $('captionText');
+  var copyNarrationBtn = $('copyNarration');
+  var copyCaptionBtn = $('copyCaption');
+  var regenBtn = $('regenBtn');
+  var generateBtn = $('generateBtn');
+  var generateLabel = $('generateLabel');
+  var statusEl = $('status');
+  var toastEl = $('toast');
+
+  /* ---------- helpers ---------- */
+  function AppError(message) { this.name = 'AppError'; this.message = message; }
+  AppError.prototype = Object.create(Error.prototype);
+  AppError.prototype.constructor = AppError;
+
+  function LSget(k, d) {
+    try { var v = window.localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; }
+  }
+  function LSset(k, v) {
+    try { window.localStorage.setItem(k, v); } catch (e) { /* ignore */ }
+  }
+  function LSdel(k) {
+    try { window.localStorage.removeItem(k); } catch (e) { /* ignore */ }
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + 'KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+  }
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toastEl.classList.remove('show'); }, 2000);
+  }
+
+  function setStatus(text) {
+    statusEl.textContent = text || '';
+  }
+
+  function showAlert(message, withKeyHint) {
+    alertBox.innerHTML = '';
+    var box = document.createElement('div');
+    box.className = 'alert';
+    var strong = document.createElement('strong');
+    strong.textContent = '확인이 필요해요';
+    var p = document.createElement('div');
+    p.textContent = message;
+    p.style.whiteSpace = 'pre-line';
+    box.appendChild(strong);
+    box.appendChild(p);
+    if (withKeyHint) {
+      var a = document.createElement('a');
+      a.href = 'https://aistudio.google.com/apikey';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'AI Studio에서 키 발급받기 ↗';
+      var line = document.createElement('div');
+      line.style.marginTop = '6px';
+      line.appendChild(a);
+      box.appendChild(line);
+    }
+    alertBox.appendChild(box);
+    try { alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { alertBox.scrollIntoView(); }
+  }
+  function hideAlert() { alertBox.innerHTML = ''; }
+
+  function readAsDataURL(file) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(String(fr.result)); };
+      fr.onerror = function () { reject(new AppError('파일을 읽지 못했어요. 다시 선택해 주세요.')); };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function loadImage(src) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new AppError('이미지를 열지 못했어요. JPG나 PNG로 바꿔 다시 올려주세요.')); };
+      img.src = src;
+    });
+  }
+
+  function guessVideoMime(name, type) {
+    if (type && type.indexOf('video/') === 0) return type;
+    var ext = (name || '').split('.').pop().toLowerCase();
+    var map = {
+      mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm',
+      avi: 'video/x-msvideo', mkv: 'video/x-matroska', mpg: 'video/mpeg', mpeg: 'video/mpeg', wmv: 'video/x-ms-wmv'
+    };
+    return map[ext] || 'video/mp4';
+  }
+
+  /* ---------- persistence ---------- */
+  function updateKeyPill() {
+    var has = !!apiKeyEl.value.trim();
+    keyPill.textContent = has ? '키 저장됨' : '미등록';
+    keyPill.className = 'pill' + (has ? ' ok' : '');
+    clearKeyBtn.style.display = has ? 'inline' : 'none';
+  }
+
+  function saveKey() {
+    var v = apiKeyEl.value.trim();
+    if (v) LSset(K.key, v); else LSdel(K.key);
+    updateKeyPill();
+  }
+
+  function saveOpts() {
+    LSset(K.opts, JSON.stringify({
+      captionOn: state.captionOn,
+      length: state.length,
+      meme: state.meme,
+      hook: state.hook,
+      extra: extraInput.value
+    }));
+  }
+
+  function applyOpts(o) {
+    if (!o || typeof o !== 'object') return;
+    if (typeof o.captionOn === 'boolean') state.captionOn = o.captionOn;
+    if (o.length === '20' || o.length === '30') state.length = o.length;
+    if (o.meme === 'low' || o.meme === 'mid' || o.meme === 'high') state.meme = o.meme;
+    if (o.hook === 'fresh' || o.hook === 'keep') state.hook = o.hook;
+    if (typeof o.extra === 'string') extraInput.value = o.extra;
+  }
+
+  /* ---------- option UI ---------- */
+  function paintOptions() {
+    captionSwitch.setAttribute('aria-checked', state.captionOn ? 'true' : 'false');
+    Array.prototype.forEach.call(lenSeg.querySelectorAll('button'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-value') === state.length ? 'true' : 'false');
+    });
+    Array.prototype.forEach.call(memeSeg.querySelectorAll('button'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-value') === state.meme ? 'true' : 'false');
+    });
+    Array.prototype.forEach.call(hookRows.querySelectorAll('.opt'), function (b) {
+      b.setAttribute('aria-checked', b.getAttribute('data-value') === state.hook ? 'true' : 'false');
+    });
+  }
+
+  /* ---------- images ---------- */
+  async function prepImage(file) {
+    var name = file.name || 'image';
+    var t = file.type || '';
+    var okTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif'];
+    var apple = (t === 'image/heic' || t === 'image/heif');
+    if (t && t.indexOf('image/') !== 0) {
+      throw new AppError(name + ' — 이미지 파일만 올릴 수 있어요.');
+    }
+    if (t && !apple && okTypes.indexOf(t) === -1) {
+      throw new AppError(name + ' — PNG · JPG · WEBP만 올릴 수 있어요.');
+    }
+    if (file.size > 30 * 1024 * 1024) {
+      throw new AppError(name + ' — 파일이 너무 커요(30MB 이하 이미지를 써 주세요).');
+    }
+    var raw = await readAsDataURL(file);
+    var mime = t || 'image/jpeg';
+    var dataUrl = raw;
+    var needResize = file.size > 1200000 || apple;
+    var img;
+    try {
+      img = await loadImage(raw);
+    } catch (e) {
+      if (apple) throw new AppError(name + ' — HEIC 사진을 열지 못했어요. 아이폰 설정 > 카메라 > 포맷을 "높은 호환성"으로 바꾸거나 JPG로 변환해 올려주세요.');
+      throw new AppError(name + ' — 이미지를 열지 못했어요. JPG나 PNG로 바꿔 다시 올려주세요.');
+    }
+    try {
+      var w = img.naturalWidth || img.width;
+      var h = img.naturalHeight || img.height;
+      var longest = Math.max(w, h) || 1;
+      var scale = Math.min(1, MAX_IMAGE_EDGE / longest);
+      if (scale < 1) needResize = true;
+      if (needResize) {
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, 0, 0, cw, ch);
+        dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        if (apple && dataUrl.indexOf('data:image/jpeg') !== 0) {
+          throw new AppError(name + ' — HEIC 사진을 변환하지 못했어요. JPG로 변환해 올려주세요.');
+        }
+        mime = 'image/jpeg';
+      }
+    } catch (e) {
+      if (e instanceof AppError) throw e;
+      throw new AppError(name + ' — 이미지를 처리하지 못했어요. JPG로 바꿔 다시 올려주세요.');
+    }
+    var base64 = dataUrl.indexOf(',') > -1 ? dataUrl.split(',')[1] : '';
+    if (!base64) throw new AppError(name + ' — 이미지를 읽지 못했어요.');
+    return {
+      id: 'i' + Math.random().toString(36).slice(2, 9),
+      name: name,
+      mime: mime,
+      base64: base64,
+      dataUrl: dataUrl
+    };
+  }
+
+  async function addImages(files) {
+    var list = files.filter(function (f) {
+      if (!f) return false;
+      if (f.type && f.type.indexOf('image/') === 0) return true;
+      return /\.(png|jpe?g|webp|heic|heif)$/i.test(f.name || '');
+    });
+    if (!list.length) { toast('이미지 파일을 골라주세요'); return; }
+    var room = MAX_IMAGES - state.images.length;
+    if (room <= 0) { toast('이미지는 최대 ' + MAX_IMAGES + '장까지예요'); return; }
+    if (list.length > room) {
+      list = list.slice(0, room);
+      toast('이미지는 최대 ' + MAX_IMAGES + '장까지라 ' + room + '장만 넣었어요');
+    }
+    var errors = [];
+    imgWorking += list.length;
+    imgCountEl.textContent = '불러오는 중…';
+    for (var i = 0; i < list.length; i++) {
+      try {
+        var item = await prepImage(list[i]);
+        state.images.push(item);
+        renderThumbs();
+      } catch (err) {
+        errors.push(err && err.message ? err.message : '이미지를 처리하지 못했어요.');
+      }
+      imgWorking -= 1;
+    }
+    renderThumbs();
+    if (errors.length) showAlert(errors.join('\n'));
+  }
+
+  function renderThumbs() {
+    thumbsEl.innerHTML = '';
+    state.images.forEach(function (im, idx) {
+      var box = document.createElement('div');
+      box.className = 'thumb';
+      var img = document.createElement('img');
+      img.src = im.dataUrl;
+      img.alt = im.name || ('이미지 ' + (idx + 1));
+      var x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'thumb-x';
+      x.setAttribute('aria-label', '이미지 삭제');
+      x.textContent = '✕';
+      x.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        state.images = state.images.filter(function (o) { return o.id !== im.id; });
+        renderThumbs();
+      });
+      box.appendChild(img);
+      box.appendChild(x);
+      thumbsEl.appendChild(box);
+    });
+    thumbsEl.hidden = state.images.length === 0;
+    imgCountEl.textContent = imgWorking > 0 ? '불러오는 중…' : (state.images.length + '장');
+  }
+
+  /* ---------- video ---------- */
+  function setVideo(file) {
+    var mime = guessVideoMime(file.name, file.type || '');
+    if (!(file.type && file.type.indexOf('video/') === 0) && !/\.(mp4|m4v|mov|webm|avi|mkv|mpg|mpeg|wmv)$/i.test(file.name || '')) {
+      showAlert('영상 파일만 올릴 수 있어요 (MP4 · MOV · WEBM).');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024 * 1024) {
+      showAlert('영상이 너무 커요. 2GB 이하 파일을 써 주세요.');
+      return;
+    }
+    clearVideo(true);
+    state.video = {
+      file: file,
+      name: file.name || 'reference-video',
+      size: file.size,
+      mime: mime,
+      base64: null,
+      fileInfo: null,
+      url: URL.createObjectURL(file)
+    };
+    videoEl.src = state.video.url;
+    videoNameEl.textContent = state.video.name + ' · ' + fmtSize(file.size);
+    videoPreview.hidden = false;
+    videoCountEl.textContent = fmtSize(file.size);
+    videoNoteEl.hidden = true;
+    if (file.size > 400 * 1024 * 1024) {
+      videoNoteEl.hidden = false;
+      videoNoteEl.textContent = '영상이 커서 업로드에 시간이 걸릴 수 있어요. 3~60초짜리 짧은 영상을 권해요.';
+    }
+  }
+
+  function clearVideo(silent) {
+    if (state.video && state.video.url) {
+      try { URL.revokeObjectURL(state.video.url); } catch (e) { /* ignore */ }
+    }
+    state.video = null;
+    videoEl.removeAttribute('src');
+    try { videoEl.load(); } catch (e) { /* ignore */ }
+    videoPreview.hidden = true;
+    videoNameEl.textContent = '';
+    videoCountEl.textContent = '선택 안 함';
+    videoNoteEl.hidden = true;
+    videoNoteEl.textContent = '';
+    if (!silent) toast('영상을 뺐어요');
+  }
+
+  /* ---------- drop wiring ---------- */
+  function wireDrop(dropEl, inputEl, onFiles) {
+    dropEl.addEventListener('click', function (e) {
+      if (e.target === inputEl) return;
+      inputEl.click();
+    });
+    dropEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        inputEl.click();
+      }
+    });
+    inputEl.addEventListener('change', function () {
+      var files = inputEl.files ? Array.prototype.slice.call(inputEl.files) : [];
+      if (files.length) onFiles(files);
+      try { inputEl.value = ''; } catch (e) { /* ignore */ }
+    });
+    ['dragenter', 'dragover'].forEach(function (t) {
+      dropEl.addEventListener(t, function (e) {
+        e.preventDefault();
+        dropEl.classList.add('over');
+      });
+    });
+    ['dragleave', 'dragend'].forEach(function (t) {
+      dropEl.addEventListener(t, function () {
+        dropEl.classList.remove('over');
+      });
+    });
+    dropEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropEl.classList.remove('over');
+      var files = e.dataTransfer && e.dataTransfer.files ? Array.prototype.slice.call(e.dataTransfer.files) : [];
+      if (files.length) onFiles(files);
+    });
+  }
+
+  /* ---------- error mapping ---------- */
+  function mapHttpError(status, detail) {
+    var d = detail || '';
+    if (/API key not valid|API_KEY_INVALID|invalid api key/i.test(d)) {
+      return 'API 키가 올바르지 않아요. AI Studio에서 키를 다시 확인해 주세요.';
+    }
+    if (/API key.*(expired|disabled)|PERMISSION_DENIED/i.test(d) && status === 403) {
+      return '이 API 키로는 요청이 거부됐어요. 키 상태와 제한 설정(HTTP 리퍼러·IP)을 확인해 주세요.';
+    }
+    if (status === 400 && /API key/i.test(d)) {
+      return 'API 키를 확인해 주세요. AI Studio에서 발급한 키를 그대로 붙여넣어 주세요.';
+    }
+    if (status === 401) return 'API 키 인증에 실패했어요. 키를 다시 넣어주세요.';
+    if (status === 403) return '이 API 키로는 요청이 거부됐어요. 키 제한 설정을 확인하거나 새 키를 만들어 주세요.';
+    if (status === 404) return '선택한 모델을 찾을 수 없어요. 모델을 gemini-2.5-flash로 바꿔 다시 시도해 주세요.';
+    if (status === 429) return '무료 사용량(할당량)을 다 썼어요. 잠시 뒤에 다시 시도하거나 AI Studio에서 사용량을 확인해 주세요.';
+    if (status === 413) return '요청이 너무 커요. 이미지 수를 줄이거나 더 짧은 영상을 써 주세요.';
+    if (status >= 500) return 'Gemini 서버가 잠시 혼잡해요. 1~2분 뒤 다시 시도해 주세요.';
+    var tail = d ? ' (' + d.slice(0, 160) + ')' : '';
+    if (/token count|too many tokens|exceeds the maximum|input is too long/i.test(d)) {
+      return '영상이나 이미지가 너무 길거나 많아 대본을 만드려면 한도가 넘어요. 더 짧은 영상을 쓰거나 이미지 수를 줄여 주세요.';
+    }
+    return '요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.' + tail;
+  }
+
+  async function toApiError(res) {
+    var detail = '';
+    try {
+      var j = await res.json();
+      if (j && j.error && j.error.message) detail = j.error.message;
+    } catch (e) { /* ignore */ }
+    return new AppError(mapHttpError(res.status, detail));
+  }
+
+  /* ---------- prompt ---------- */
+  function buildPrompt(extraText) {
+    var len = LEN_SPEC[state.length] || LEN_SPEC['20'];
+    var L = [];
+    L.push('너는 한국 뷰티 크리에이터와 일하는 인스타그램 릴스 대본 작가다. 아래 자료를 분석해, 실제로 소리 내어 읽으면 바로 녹음할 수 있는 한국어 나레이션 대본을 쓴다.');
+    L.push('');
+    L.push('[1] 자료 분석 — 대본을 쓰기 전에 먼저');
+    if (state.images.length) {
+      L.push('- 첨부한 제품 소구점 이미지 ' + state.images.length + '장을 모두 읽고, 제품명 / 핵심 성분·기능·사용감 / 프로모션·할인 / 필수 표기(계정 태그, 해시태그, 주의 문구)를 빠짐없이 뽑아낸다. 이미지 안의 작은 글씨와 표도 읽는다.');
+    }
+    if (state.video) {
+      L.push('- 첨부한 레퍼런스 영상을 실제로 보고 ① 첫 3초 훅 방식 ② 컷 전환 간격과 템포 ③ 자막의 위치와 길이 ④ 말투와 말 속도 ⑤ 반복 리듬을 분석한다. 그 리듬에 대본의 호흡을 맞춘다.');
+    }
+    if (!state.images.length && !state.video) {
+      L.push('- 첨부 자료가 텍스트뿐이다. 텍스트만으로 제품과 타깃을 추론하고, 없는 정보는 만들지 않는다.');
+    }
+    L.push('- 브리프에 없는 사실(가격, 할인율, 성분 수치, 판매 순위, 임상 결과, 효능)은 절대 만들어내지 않는다. 숫자와 고유명사는 적힌 그대로만 쓴다.');
+    L.push('');
+    L.push('[2] 제품 브리프 (텍스트)');
+    L.push(productTextEl.value.trim() || '(텍스트 없음 — 첨부 이미지에서 읽어서 반영)');
+    var note = refNoteEl.value.trim();
+    if (note) {
+      L.push('');
+      L.push('[3] 레퍼런스 메모');
+      L.push(note);
+    }
+    L.push('');
+    L.push('[4] 대본 조건');
+    L.push('- 길이: ' + len.label + ' — 공백 포함 ' + len.chars + ' 한국어. 구성: ' + len.pace);
+    L.push('- 밈 강도: ' + MEME_SPEC[state.meme]);
+    L.push('- 후킹: ' + HOOK_SPEC[state.hook]);
+    L.push('- 화자/청자: 20~30대 여성 뷰티 시청자에게 말하는 구어체. 기본은 "~요"체, 밈 강도가 높으면 반말 리액션을 섞어도 된다. 실제 릴스에서 쓰는 말투, 짧은 호흡.');
+    L.push('- 첫 문장이 후킹이다. 6~14자 안팎으로 짧고 세게. 인사말·자기소개·"오늘은"으로 시작하지 않는다.');
+    L.push('- 필수 정보는 모두 넣는다: 제품명, 소구점 전부, 프로모션·할인, 필수 태그. 태그가 읽기 어색하면 말로 자연스럽게 풀어 쓴다(예: "@cosrx_korea" → "코스알엑스 공식 계정").');
+    L.push('- 나레이션에는 대괄호 지시문, 컷 설명, 해시태그, 이모지를 넣지 않는다. 오직 읽을 말만. 호흡이 끊기는 곳은 줄바꿈 한 번으로 표시한다.');
+    L.push('- 상투적 광고 문구("지금 만나보세요", "여러분의 피부를 위해"), 같은 표현 반복, 형용사만 나열하는 것은 금지. 구체적 장면과 감각(발림성, 흡수, 화장 위에 올렸을 때 등)으로 말한다.');
+    L.push('');
+    L.push('[5] 캡션');
+    if (state.captionOn) {
+      L.push('- 인스타그램 캡션도 함께 쓴다. 첫 줄은 후킹 한 줄(이모지 1개까지), 본문 2~4줄(핵심 소구점 + 프로모션), 마지막에 해시태그 12~20개.');
+      L.push('- 해시태그에는 브리프의 필수 태그를 반드시 포함하고, 브랜드·제품·피부 고민·트렌드 태그를 섞는다. 줄바꿈은 실제 줄바꿈 문자로 넣는다.');
+    } else {
+      L.push('- 이번 요청에서는 캡션을 만들지 않는다. caption 값은 출력하지 않는다.');
+    }
+    L.push('');
+    L.push('[6] 출력 형식');
+    L.push('- 아래 형태의 JSON 객체 하나만 출력한다. 코드블록, 설명, 인사말 금지.');
+    L.push('- { "narration": "읽을 대본", ' + (state.captionOn ? '"caption": "캡션", ' : '') + '"estimated_seconds": 20 }');
+    L.push('- estimated_seconds: 이 나레이션을 릴스 템포로 읽었을 때의 예상 초(정수).');
+    if (extraText) {
+      L.push('');
+      L.push('[7] 추가 요청 — 위 조건보다 우선해서 반영한다.');
+      extraText.split('\n').forEach(function (line) {
+        if (line.trim()) L.push('- ' + line.trim());
+      });
+    }
+    return L.join('\n');
+  }
+
+  function makeSchema() {
+    var props = {
+      narration: { type: 'string', description: '릴스에서 실제로 읽을 한국어 나레이션. 호흡이 끊기는 곳은 줄바꿈으로 표시.' },
+      estimated_seconds: { type: 'number', description: '릴스 템포로 읽었을 때 예상 재생 시간(초).' }
+    };
+    var required = ['narration', 'estimated_seconds'];
+    if (state.captionOn) {
+      props.caption = { type: 'string', description: '인스타그램 캡션과 해시태그. 첫 줄 후킹, 본문 2~4줄, 해시태그 12~20개.' };
+      required = ['narration', 'caption', 'estimated_seconds'];
+    }
+    return { type: 'object', properties: props, required: required };
+  }
+
+  /* ---------- video upload (Files API) ---------- */
+  async function uploadVideoMultipart(key, file, mime, onStatus) {
+    onStatus('영상을 Gemini에 업로드하는 중…');
+    var fd = new FormData();
+    var meta = JSON.stringify({ file: { display_name: (file.name || 'reference-video').slice(0, 90) } });
+    fd.append('metadata', new Blob([meta], { type: 'application/json' }));
+    fd.append('file', file);
+    var res = await fetch(UPLOAD_START, {
+      method: 'POST',
+      headers: { 'x-goog-api-key': key, 'X-Goog-Upload-Protocol': 'multipart' },
+      body: fd
+    });
+    if (!res.ok) throw await toApiError(res);
+    var j = await res.json();
+    if (!j || !j.file || !j.file.name) throw new AppError('영상 업로드가 완료되지 않았어요. 다시 시도해 주세요.');
+    return j.file;
+  }
+
+  async function uploadVideoFile(key, file, mime, onStatus) {
+    onStatus('영상을 Gemini에 업로드하는 중…');
+    var startRes = await fetch(UPLOAD_START, {
+      method: 'POST',
+      headers: {
+        'x-goog-api-key': key,
+        'X-Goog-Upload-Protocol': 'resumable',
+        'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': String(file.size),
+        'X-Goog-Upload-Header-Content-Type': mime,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ file: { display_name: (file.name || 'reference-video').slice(0, 90) } })
+    });
+    if (!startRes.ok) throw await toApiError(startRes);
+    var uploadUrl = startRes.headers.get('x-goog-upload-url');
+    if (!uploadUrl) return uploadVideoMultipart(key, file, mime, onStatus);
+
+    var fileObj = await new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl, true);
+      xhr.setRequestHeader('X-Goog-Upload-Offset', '0');
+      xhr.setRequestHeader('X-Goog-Upload-Command', 'upload, finalize');
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable && e.total) {
+          var pct = Math.min(99, Math.round((e.loaded / e.total) * 100));
+          onStatus('영상 업로드 중… ' + pct + '%');
+        }
+      };
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            var j = JSON.parse(xhr.responseText);
+            if (j && j.file) resolve(j.file);
+            else reject(new AppError('영상 업로드 응답을 읽지 못했어요. 다시 시도해 주세요.'));
+          } catch (e) {
+            reject(new AppError('영상 업로드 응답을 읽지 못했어요. 다시 시도해 주세요.'));
+          }
+        } else {
+          var detail = '';
+          try { detail = JSON.parse(xhr.responseText).error.message || ''; } catch (e) { /* ignore */ }
+          reject(new AppError(mapHttpError(xhr.status, detail)));
+        }
+      };
+      xhr.onerror = function () {
+        reject(new AppError('영상 업로드에 실패했어요. 네트워크 연결을 확인하고 다시 시도해 주세요.'));
+      };
+      xhr.ontimeout = function () {
+        reject(new AppError('영상 업로드가 시간 초과로 중단됐어요. 더 짧은 영상으로 시도해 주세요.'));
+      };
+      xhr.send(file);
+    });
+
+    if (!fileObj || !fileObj.name) throw new AppError('영상 업로드가 완료되지 않았어요. 다시 시도해 주세요.');
+    return fileObj;
+  }
+
+  async function waitForFileActive(key, fileName, onStatus) {
+    var url = API_BASE + '/' + fileName;
+    var started = Date.now();
+    while (Date.now() - started < FILE_WAIT_MS) {
+      var res = await fetch(url, { headers: { 'x-goog-api-key': key } });
+      if (!res.ok) throw await toApiError(res);
+      var j = await res.json();
+      var st = (j && j.state) || 'PROCESSING';
+      if (st === 'ACTIVE') return j;
+      if (st === 'FAILED') throw new AppError('Gemini가 영상 처리에 실패했어요. MP4로 변환해 다시 올려주세요.');
+      var sec = Math.max(1, Math.round((Date.now() - started) / 1000));
+      onStatus('Gemini가 영상을 읽는 중… (' + sec + '초)');
+      await sleep(2500);
+    }
+    throw new AppError('영상 준비가 3분 안에 끝나지 않았어요. 조금 더 짧은 영상으로 다시 시도해 주세요.');
+  }
+
+  /* ---------- build request ---------- */
+  async function buildParts(key, promptText, onStatus) {
+    var parts = [];
+    state.images.forEach(function (im) {
+      parts.push({ inlineData: { mimeType: im.mime, data: im.base64 } });
+    });
+
+    var v = state.video;
+    if (v) {
+      var b64len = Math.ceil(v.size / 3) * 4;
+      var imgLen = state.images.reduce(function (a, im) { return a + im.base64.length; }, 0);
+      var canInline = v.size <= INLINE_VIDEO_LIMIT && (b64len + imgLen) <= INLINE_TOTAL_LIMIT;
+
+      if (canInline) {
+        if (!v.base64) {
+          onStatus('영상을 준비하는 중…');
+          var d = await readAsDataURL(v.file);
+          v.base64 = d.indexOf(',') > -1 ? d.split(',')[1] : '';
+          if (!v.base64) throw new AppError('영상을 읽지 못했어요. 다시 선택해 주세요.');
+        }
+        parts.push({ inlineData: { mimeType: v.mime, data: v.base64 } });
+      } else {
+        if (!v.fileInfo) {
+          v.fileInfo = await uploadVideoFile(key, v.file, v.mime, onStatus);
+        }
+        onStatus('Gemini가 영상을 읽는 중…');
+        await waitForFileActive(key, v.fileInfo.name, onStatus);
+        var uri = v.fileInfo.uri || (API_BASE + '/' + v.fileInfo.name);
+        parts.push({ fileData: { mimeType: v.mime, fileUri: uri } });
+      }
+    }
+
+    parts.push({ text: promptText });
+    return parts;
+  }
+
+  async function callGemini(key, parts) {
+    var model = modelEl.value || 'gemini-2.5-flash';
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, GEN_TIMEOUT_MS);
+    var temp = state.meme === 'high' ? 1.0 : (state.meme === 'mid' ? 0.9 : 0.75);
+    var body = {
+      contents: [{ role: 'user', parts: parts }],
+      generationConfig: {
+        temperature: temp,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+        responseSchema: makeSchema()
+      }
+    };
+    try {
+      var res = await fetch(API_BASE + '/models/' + encodeURIComponent(model) + ':generateContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify(body),
+        signal: ctrl.signal
+      });
+      if (!res.ok) throw await toApiError(res);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /* ---------- parse ---------- */
+  function parseResult(data) {
+    var cand = data && data.candidates && data.candidates[0];
+    if (!cand) {
+      var blocked = data && data.promptFeedback && data.promptFeedback.blockReason;
+      if (blocked) throw new AppError('안전 정책에 걸려 생성이 막혔어요. 제품 표현을 조금 바꿔 다시 시도해 주세요.');
+      throw new AppError('응답이 비어 있어요. 옵션을 조금 바꿔 다시 시도해 주세요.');
+    }
+    var text = '';
+    var content = cand.content && cand.content.parts ? cand.content.parts : [];
+    content.forEach(function (p) { if (p && typeof p.text === 'string') text += p.text; });
+    text = text.trim();
+
+    if (!text) {
+      if (cand.finishReason === 'MAX_TOKENS') throw new AppError('대본이 너무 길어 잘렸어요. 길이를 "20초 콤팩트"로 바꿔 다시 시도해 주세요.');
+      if (cand.finishReason === 'SAFETY') throw new AppError('안전 정책에 걸려 생성이 중단됐어요. 표현을 조금 바꿔 다시 시도해 주세요.');
+      if (cand.finishReason === 'PROHIBITED_CONTENT') throw new AppError('정책상 생성할 수 없는 내용으로 판단됐어요. 브리프를 조금 다르게 적어 다시 시도해 주세요.');
+      throw new AppError('응답이 비어 있어요. 다시 시도해 주세요.');
+    }
+
+    var cleaned = text.replace(/^```(?:json|JSON)?\s*/, '').replace(/\s*```$/, '').trim();
+    var obj = null;
+    try { obj = JSON.parse(cleaned); } catch (e) { obj = null; }
+    if (!obj || typeof obj !== 'object') {
+      var s = cleaned.indexOf('{');
+      var e2 = cleaned.lastIndexOf('}');
+      if (s > -1 && e2 > s) {
+        try { obj = JSON.parse(cleaned.slice(s, e2 + 1)); } catch (e3) { obj = null; }
+      }
+    }
+    if (!obj || typeof obj !== 'object') obj = { narration: cleaned };
+
+    var narration = typeof obj.narration === 'string' ? obj.narration.trim() : '';
+    if (!narration && typeof obj.script === 'string') narration = obj.script.trim();
+    var caption = typeof obj.caption === 'string' ? obj.caption.trim() : '';
+    var secs = Number(obj.estimated_seconds);
+    return {
+      narration: narration,
+      caption: caption,
+      seconds: isFinite(secs) && secs > 0 ? Math.round(secs) : null
+    };
+  }
+
+  /* ---------- render ---------- */
+  function renderResult(r) {
+    lastResult = r;
+    hideAlert();
+
+    var chars = Array.from(r.narration).length;
+    var computed = Math.max(5, Math.round(chars / 9.5));
+    var target = state.length === '20' ? 20 : 30;
+    var secs = r.seconds && r.seconds >= 3 && r.seconds <= 120 ? r.seconds : computed;
+
+    narrationText.textContent = r.narration;
+    charBadge.textContent = chars + '자';
+    charBadge.title = '공백 포함 ' + chars + '자';
+    secBadge.textContent = '약 ' + secs + '초';
+    secBadge.className = 'badge' + (secs > target * 1.35 ? ' over' : '');
+    secBadge.title = secs > target * 1.35
+      ? '목표(' + target + '초)보다 길어요. "더 짧게"를 눌러 다듬어 보세요.'
+      : '목표 ' + target + '초 · 글자 수 기준 약 ' + computed + '초';
+
+    if (r.caption) {
+      captionText.textContent = r.caption;
+      captionCard.hidden = false;
+    } else {
+      captionText.textContent = '';
+      captionCard.hidden = true;
+    }
+
+    resultsEl.hidden = false;
+    narrationCard.classList.remove('rise');
+    void narrationCard.offsetWidth;
+    narrationCard.classList.add('rise');
+    try {
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      resultsEl.scrollIntoView();
+    }
+    if (state.captionOn && !r.caption) {
+      toast('캡션이 함께 나오지 않았어요. 다시 생성해 보세요.');
+    }
+  }
+
+  /* ---------- busy ---------- */
+  function setBusy(v, label) {
+    busy = v;
+    generateBtn.disabled = v;
+    generateBtn.classList.toggle('loading', v);
+    generateLabel.textContent = v ? (label || '만드는 중…') : '대본 만들기';
+    Array.prototype.forEach.call(document.querySelectorAll('.refine-row button'), function (b) { b.disabled = v; });
+    regenBtn.disabled = v;
+    if (!v) setStatus('');
+  }
+
+  /* ---------- generate ---------- */
+  async function runGenerate(refineKey) {
+    if (busy) return;
+    var key = apiKeyEl.value.trim();
+    if (!key) {
+      showAlert('Gemini API 키가 필요해요. 위 "Gemini API 키" 칸에 AI Studio에서 발급받은 키를 붙여넣어 주세요.', true);
+      apiCard.open = true;
+      apiKeyEl.focus();
+      return;
+    }
+    var hasText = productTextEl.value.trim().length > 0;
+    if (!state.images.length && !hasText && !state.video) {
+      showAlert('제품 소구점 이미지나 텍스트 중 하나는 넣어주세요. (레퍼런스 영상만으로는 대본을 쓰기 어려워요)');
+      return;
+    }
+    apiCard.open = false;
+
+    var extraParts = [];
+    if (extraInput.value.trim()) extraParts.push(extraInput.value.trim());
+    if (refineKey && REFINE[refineKey]) extraParts.push(REFINE[refineKey]);
+    var promptText = buildPrompt(extraParts.join('\n'));
+
+    setBusy(true, refineKey ? '다듬는 중…' : '만드는 중…');
+    setStatus('준비하는 중…');
+    hideAlert();
+
+    try {
+      var parts = await buildParts(key, promptText, setStatus);
+      setStatus('대본을 쓰는 중… (영상이 있으면 조금 더 걸려요)');
+      var data = await callGemini(key, parts);
+      var parsed = parseResult(data);
+      if (!parsed.narration) throw new AppError('대본이 비어 있어요. 옵션을 조금 바꿔 다시 시도해 주세요.');
+      renderResult(parsed);
+    } catch (err) {
+      if (err && err.name === 'AbortError') {
+        showAlert('응답이 너무 오래 걸려 요청을 멈췄어요. 영상을 빼거나 "20초 콤팩트"로 다시 시도해 주세요.');
+      } else if (err instanceof AppError) {
+        showAlert(err.message);
+      } else if (err && /Failed to fetch|NetworkError|Load failed|network/i.test(String(err.message || ''))) {
+        showAlert('Gemini 서버에 연결하지 못했어요. 인터넷 연결을 확인하고, 광고 차단 확장 프로그램이 있으면 잠시 꺼 주세요.');
+      } else {
+        showAlert('문제가 생겼어요: ' + (err && err.message ? err.message : String(err)));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /* ---------- copy ---------- */
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-2000px';
+    ta.style.left = '0';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { ta.setSelectionRange(0, ta.value.length); } catch (e) { /* ignore */ }
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  async function copyText(text, btn) {
+    if (!text) { toast('복사할 내용이 없어요'); return; }
+    var ok = false;
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+      try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { ok = false; }
+    }
+    if (!ok) ok = legacyCopy(text);
+    if (!ok) { toast('복사가 안 됐어요. 길게 눌러 직접 복사해 주세요.'); return; }
+    toast('복사했어요 ✓');
+    if (btn) {
+      var prev = btn.textContent;
+      btn.classList.add('copied');
+      btn.textContent = '복사됨 ✓';
+      setTimeout(function () {
+        btn.classList.remove('copied');
+        btn.textContent = prev;
+      }, 1600);
+    }
+  }
+
+  /* ---------- events ---------- */
+  apiKeyEl.addEventListener('input', function () {
+    updateKeyPill();
+    clearTimeout(apiKeyEl._t);
+    apiKeyEl._t = setTimeout(saveKey, 400);
+  });
+  apiKeyEl.addEventListener('change', saveKey);
+  toggleKeyBtn.addEventListener('click', function () {
+    var showing = apiKeyEl.type === 'text';
+    apiKeyEl.type = showing ? 'password' : 'text';
+    toggleKeyBtn.textContent = showing ? '보기' : '숨기기';
+    toggleKeyBtn.setAttribute('aria-pressed', showing ? 'false' : 'true');
+  });
+  clearKeyBtn.addEventListener('click', function () {
+    apiKeyEl.value = '';
+    LSdel(K.key);
+    updateKeyPill();
+    toast('저장된 키를 지웠어요');
+  });
+  modelEl.addEventListener('change', function () { LSset(K.model, modelEl.value); });
+
+  wireDrop(imageDrop, imageInput, addImages);
+  wireDrop(videoDrop, videoInput, function (files) { if (files[0]) setVideo(files[0]); });
+
+  videoEl.addEventListener('error', function () {
+    if (!state.video) return;
+    videoNoteEl.hidden = false;
+    videoNoteEl.textContent = '미리보기가 안 뜨는 형식이에요. 분석은 그대로 진행되지만, 안 되면 MP4로 변환해 올려주세요.';
+  });
+  removeVideoBtn.addEventListener('click', function () { clearVideo(); });
+
+  productTextEl.addEventListener('input', function () {
+    textCountEl.textContent = Array.from(productTextEl.value).length + '자';
+  });
+
+  captionSwitch.addEventListener('click', function () {
+    state.captionOn = !state.captionOn;
+    paintOptions();
+    saveOpts();
+  });
+  lenSeg.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    state.length = b.getAttribute('data-value');
+    paintOptions();
+    saveOpts();
+  });
+  memeSeg.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    state.meme = b.getAttribute('data-value');
+    paintOptions();
+    saveOpts();
+  });
+  hookRows.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.opt') : null;
+    if (!b) return;
+    state.hook = b.getAttribute('data-value');
+    paintOptions();
+    saveOpts();
+  });
+  extraInput.addEventListener('change', saveOpts);
+
+  generateBtn.addEventListener('click', function () { runGenerate(null); });
+  regenBtn.addEventListener('click', function () { runGenerate(null); });
+  Array.prototype.forEach.call(document.querySelectorAll('.refine-row button'), function (b) {
+    b.addEventListener('click', function () { runGenerate(b.getAttribute('data-refine')); });
+  });
+  copyNarrationBtn.addEventListener('click', function () {
+    copyText(lastResult ? lastResult.narration : '', copyNarrationBtn);
+  });
+  copyCaptionBtn.addEventListener('click', function () {
+    copyText(lastResult ? lastResult.caption : '', copyCaptionBtn);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !busy) {
+      e.preventDefault();
+      runGenerate(null);
+    }
+  });
+
+  /* ---------- init ---------- */
+  (function init() {
+    var savedKey = LSget(K.key, '');
+    if (savedKey) {
+      apiKeyEl.value = savedKey;
+      apiCard.open = false;
+    }
+    updateKeyPill();
+    var savedModel = LSget(K.model, '');
+    if (savedModel === 'gemini-2.5-pro' || savedModel === 'gemini-2.5-flash') modelEl.value = savedModel;
+
+    try {
+      var raw = LSget(K.opts, '');
+      if (raw) applyOpts(JSON.parse(raw));
+    } catch (e) { /* ignore */ }
+
+    paintOptions();
+    textCountEl.textContent = Array.from(productTextEl.value).length + '자';
+  })();
+})();
+</script>
+</body>
+</html>
