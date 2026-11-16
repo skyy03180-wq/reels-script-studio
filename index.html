@@ -137,6 +137,11 @@
   .video-meta .ghost{padding:5px 10px;font-size:12px;border-radius:9px}
   .vnote{margin:8px 0 0;font-size:12px;color:var(--warn)}
 
+  /* url note */
+  .url-note{margin:7px 0 0;font-size:12px;line-height:1.5;color:var(--ink-3);word-break:keep-all}
+  .url-note.warn{color:var(--warn);font-weight:700;background:rgba(180,87,27,.09);border:1px solid rgba(180,87,27,.3);border-radius:11px;padding:9px 11px}
+  @media (prefers-color-scheme: dark){.url-note.warn{background:rgba(240,179,126,.12);border-color:rgba(240,179,126,.34)}}
+
   /* segmented */
   .seg{display:grid;gap:5px;background:var(--bg-soft);padding:4px;border-radius:14px;border:1px solid var(--line)}
   .seg.seg-2{grid-template-columns:1fr 1fr}
@@ -291,6 +296,11 @@
     </div>
     <p class="vnote" id="videoNote" hidden></p>
     <div class="field">
+      <label for="videoUrl">레퍼런스 영상 링크 (선택)</label>
+      <input id="videoUrl" type="url" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://www.youtube.com/shorts/... 또는 https://www.instagram.com/reel/..." />
+      <p class="url-note" id="videoUrlNote">※ 인스타그램 등 일부 SNS 링크는 보안상 바로 읽어오지 못할 수 있어요. 인스타 릴스는 영상을 저장해 파일로 올려주시는 게 가장 정확합니다.</p>
+    </div>
+    <div class="field">
       <label for="refNote">레퍼런스 메모 (선택)</label>
       <input id="refNote" type="text" placeholder="예) 30초 빠른 템포, 상단 짧은 펀치라인 자막, 첫 3초 훅 강함" />
     </div>
@@ -388,6 +398,7 @@
     <summary><span>사용 팁</span><span class="chev" aria-hidden="true">+</span></summary>
     <ul>
       <li>레퍼런스는 인스타 릴스를 <b>화면 기록</b>하거나 저장한 파일을 그대로 올리면 돼요. 3~60초면 충분해요.</li>
+      <li>영상 파일 대신 <b>링크</b>만 넣어도 돼요. 공개된 YouTube 링크는 영상으로 바로 분석하고, 인스타그램처럼 바로 읽지 못하는 링크는 참고 자료로만 전달돼요.</li>
       <li>작은 영상은 바로 분석하고, 큰 영상은 Gemini에 자동 업로드한 뒤 분석해요(진행률 표시). 1분 이내 영상이면 충분해요.</li>
       <li>영상이 없어도 이미지·PDF·텍스트만으로 대본을 만들 수 있어요. 영상이 있으면 컷 템포와 말투까지 맞춰요.</li>
       <li>제품 가이드라인·브랜드 브리프가 <b>PDF</b>면 그대로 올리면 돼요. 작은 PDF는 바로, 큰 PDF는 Gemini에 자동 업로드한 뒤 읽어요.</li>
@@ -458,6 +469,8 @@
     hook: '첫 문장(첫 3초)의 후킹만 완전히 다른 각도로 새로 쓴다. 본문과 프로모션 마무리는 유지하되 자연스럽게 이어지게 다듬는다.'
   };
 
+  var LINK_NOTE_BASE = '※ 인스타그램 등 일부 SNS 링크는 보안상 바로 읽어오지 못할 수 있어요. 인스타 릴스는 영상을 저장해 파일로 올려주시는 게 가장 정확합니다.';
+
   /* ---------- state ---------- */
   var state = {
     files: [],   /* 제품 소구점 첨부: kind 'image' | 'pdf' */
@@ -494,6 +507,8 @@
   var videoCountEl = $('videoCount');
   var videoNoteEl = $('videoNote');
   var removeVideoBtn = $('removeVideo');
+  var videoUrlEl = $('videoUrl');
+  var videoUrlNoteEl = $('videoUrlNote');
   var refNoteEl = $('refNote');
   var captionSwitch = $('captionSwitch');
   var lenSeg = $('lenSeg');
@@ -602,6 +617,57 @@
       avi: 'video/x-msvideo', mkv: 'video/x-matroska', mpg: 'video/mpeg', mpeg: 'video/mpeg', wmv: 'video/x-ms-wmv'
     };
     return map[ext] || 'video/mp4';
+  }
+
+  /* ---------- reference link ---------- */
+  function youtubeVideoId(u) {
+    var s = String(u || '');
+    var m = s.match(/(?:youtu\.be\/|\/shorts\/|\/embed\/|\/live\/|\/v\/)([A-Za-z0-9_-]{6,})/);
+    if (m) return m[1];
+    var q = s.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
+    return q ? q[1] : '';
+  }
+
+  function currentLink() {
+    var raw = (videoUrlEl.value || '').trim();
+    if (!raw) return { kind: 'none', url: '' };
+    var u = raw;
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u.replace(/^\/+/, '');
+    if (!/^https?:\/\/[^\s/]+\.[^\s/]{2,}/i.test(u)) return { kind: 'invalid', url: raw };
+    if (/instagram\.com|instagr\.am/i.test(u)) return { kind: 'instagram', url: u };
+    if (/youtube\.com|youtu\.be/i.test(u)) {
+      var id = youtubeVideoId(u);
+      return { kind: 'youtube', url: id ? 'https://www.youtube.com/watch?v=' + id : u, id: id };
+    }
+    return { kind: 'other', url: u };
+  }
+
+  function renderUrlNote() {
+    var link = currentLink();
+    if (link.kind === 'instagram') {
+      videoUrlNoteEl.className = 'url-note warn';
+      videoUrlNoteEl.textContent = LINK_NOTE_BASE + ' 링크는 참고용으로만 전달되고, 영상 분석은 파일로만 돼요.';
+    } else if (link.kind === 'youtube') {
+      videoUrlNoteEl.className = 'url-note';
+      videoUrlNoteEl.textContent = 'YouTube 링크는 영상으로 바로 분석해요(공개 영상만). 비공개·연령 제한 영상은 읽지 못할 수 있어요.';
+    } else if (link.kind === 'other') {
+      videoUrlNoteEl.className = 'url-note';
+      videoUrlNoteEl.textContent = '이 링크는 자동으로 열어보지 못해요(바로 읽는 건 공개 YouTube 영상뿐). 주소만 참고 자료로 전달돼요. 인스타 릴스는 영상을 저장해 파일로 올려주세요.';
+    } else if (link.kind === 'invalid') {
+      videoUrlNoteEl.className = 'url-note warn';
+      videoUrlNoteEl.textContent = '주소 형식을 확인해 주세요. https:// 로 시작하는 영상 링크를 넣어주세요.';
+    } else {
+      videoUrlNoteEl.className = 'url-note';
+      videoUrlNoteEl.textContent = LINK_NOTE_BASE;
+    }
+    updateVideoCount();
+  }
+
+  function updateVideoCount() {
+    var bits = [];
+    if (state.video) bits.push(fmtSize(state.video.size));
+    if (currentLink().url) bits.push('링크');
+    videoCountEl.textContent = bits.length ? bits.join(' + ') : '선택 안 함';
   }
 
   /* ---------- persistence ---------- */
@@ -894,7 +960,7 @@
     videoEl.src = state.video.url;
     videoNameEl.textContent = state.video.name + ' · ' + fmtSize(file.size);
     videoPreview.hidden = false;
-    videoCountEl.textContent = fmtSize(file.size);
+    updateVideoCount();
     videoNoteEl.hidden = true;
     if (file.size > 400 * 1024 * 1024) {
       videoNoteEl.hidden = false;
@@ -911,7 +977,7 @@
     try { videoEl.load(); } catch (e) { /* ignore */ }
     videoPreview.hidden = true;
     videoNameEl.textContent = '';
-    videoCountEl.textContent = '선택 안 함';
+    updateVideoCount();
     videoNoteEl.hidden = true;
     videoNoteEl.textContent = '';
     if (!silent) toast('영상을 뺐어요');
@@ -968,6 +1034,9 @@
     if (status === 401) return 'API 키 인증에 실패했어요. 키를 다시 넣어주세요.';
     if (status === 403) return '이 API 키로는 요청이 거부됐어요. 키 제한 설정을 확인하거나 새 키를 만들어 주세요.';
     if (status === 404) return '선택한 모델을 찾을 수 없어요. 모델을 gemini-2.5-flash로 바꿔 다시 시도해 주세요.';
+    if (status === 400 && /youtube|file_?uri|unsupported uri|invalid.*url|url.*invalid/i.test(d)) {
+      return '레퍼런스 링크로는 영상을 읽지 못했어요. 공개된 YouTube 영상 링크인지 확인하거나, 영상을 저장해 파일로 올려주세요.';
+    }
     if (status === 429) return '무료 사용량(할당량)을 다 썼어요. 잠시 뒤에 다시 시도하거나 AI Studio에서 사용량을 확인해 주세요.';
     if (status === 413) return '요청이 너무 커요. 이미지·PDF 수를 줄이거나 더 짧은 영상을 써 주세요.';
     if (status >= 500) return 'Gemini 서버가 잠시 혼잡해요. 1~2분 뒤 다시 시도해 주세요.';
@@ -990,6 +1059,7 @@
   /* ---------- prompt ---------- */
   function buildPrompt(extraText) {
     var len = LEN_SPEC[state.length] || LEN_SPEC['20'];
+    var link = currentLink();
     var L = [];
     L.push('너는 한국 뷰티 크리에이터와 일하는 인스타그램 릴스 대본 작가다. 아래 자료를 분석해, 실제로 소리 내어 읽으면 바로 녹음할 수 있는 한국어 나레이션 대본을 쓴다.');
     L.push('');
@@ -1005,8 +1075,13 @@
     }
     if (state.video) {
       L.push('- 첨부한 레퍼런스 영상을 실제로 보고 ① 첫 3초 훅 방식 ② 컷 전환 간격과 템포 ③ 자막의 위치와 길이 ④ 말투와 말 속도 ⑤ 반복 리듬을 분석한다. 그 리듬에 대본의 호흡을 맞춘다.');
+      if (link.kind === 'youtube') L.push('- 레퍼런스 영상 파일과 YouTube 링크가 같이 첨부됐다. 둘 다 참고하되, 말투·템포는 파일 영상 쪽을 더 따른다.');
+    } else if (link.kind === 'youtube') {
+      L.push('- 첨부한 레퍼런스 영상(YouTube 링크)을 실제로 보고 ① 첫 3초 훅 방식 ② 컷 전환 간격과 템포 ③ 자막의 위치와 길이 ④ 말투와 말 속도 ⑤ 반복 리듬을 분석한다. 그 리듬에 대본의 호흡을 맞춘다.');
+    } else if (link.kind === 'instagram' || link.kind === 'other') {
+      L.push('- 분석할 레퍼런스 영상은 없고 링크만 있다. 이 링크는 열어볼 수 없으므로 영상 내용·자막·대사를 지어내지 않는다. 링크는 플랫폼·형식 참고로만 쓰고, 템포는 일반적인 뷰티 릴스 기준으로 잡는다.');
     }
-    if (!imgN && !pdfN && !state.video) {
+    if (!imgN && !pdfN && !state.video && !link.url) {
       L.push('- 첨부 자료가 텍스트뿐이다. 텍스트만으로 제품과 타깃을 추론하고, 없는 정보는 만들지 않는다.');
     }
     L.push('- 브리프에 없는 사실(가격, 할인율, 성분 수치, 판매 순위, 임상 결과, 효능)은 절대 만들어내지 않는다. 숫자와 고유명사는 적힌 그대로만 쓴다.');
@@ -1014,10 +1089,19 @@
     L.push('[2] 제품 브리프 (텍스트)');
     L.push(productTextEl.value.trim() || '(텍스트 없음 — 첨부 이미지·PDF에서 읽어서 반영)');
     var note = refNoteEl.value.trim();
-    if (note) {
+    if (note || link.url) {
       L.push('');
-      L.push('[3] 레퍼런스 메모');
-      L.push(note);
+      L.push('[3] 레퍼런스');
+      if (link.url) {
+        if (link.kind === 'youtube') {
+          L.push('- 레퍼런스 영상 링크(YouTube, 영상으로 함께 첨부됨): ' + link.url);
+        } else if (link.kind === 'instagram') {
+          L.push('- 레퍼런스 링크(인스타그램): ' + link.url + ' — 이 링크는 직접 열어볼 수 없다. 영상 내용·대사·자막을 지어내지 말고 링크는 참고 정보로만 쓴다.');
+        } else {
+          L.push('- 레퍼런스 링크: ' + link.url + ' — 이 링크는 직접 열어볼 수 없다. 링크 내용을 추측해서 만들지 않는다.');
+        }
+      }
+      if (note) L.push('- 레퍼런스 메모: ' + note);
     }
     L.push('');
     L.push('[4] 대본 조건');
@@ -1235,10 +1319,15 @@
       }
     }
 
+    /* YouTube 링크는 Gemini가 fileData(fileUri)로 직접 열어 본다. 다른 링크는 프롬프트에만 넣는다. */
+    var link = currentLink();
+    if (link.kind === 'youtube' && link.url) {
+      parts.push({ fileData: { fileUri: link.url } });
+    }
+
     parts.push({ text: promptText });
     return parts;
   }
-
   async function callGemini(key, parts) {
     var model = modelEl.value || 'gemini-2.5-flash';
     var ctrl = new AbortController();
@@ -1374,8 +1463,14 @@
       return;
     }
     var hasText = productTextEl.value.trim().length > 0;
-    if (!state.files.length && !hasText && !state.video) {
-      showAlert('제품 소구점 이미지·PDF나 텍스트 중 하나는 넣어주세요. (레퍼런스 영상만으로는 대본을 쓰기 어려워요)');
+    var link = currentLink();
+    if (link.kind === 'invalid') {
+      showAlert('레퍼런스 영상 링크 주소를 확인해 주세요. https:// 로 시작하는 링크를 넣거나, 링크 칸을 비워주세요.');
+      videoUrlEl.focus();
+      return;
+    }
+    if (!state.files.length && !hasText) {
+      showAlert('제품 소구점(이미지·PDF·텍스트)이 하나는 있어야 대본을 쓸 수 있어요. 레퍼런스 영상만으로는 만들기 어려워요.');
       return;
     }
     apiCard.open = false;
@@ -1484,6 +1579,9 @@
     textCountEl.textContent = Array.from(productTextEl.value).length + '자';
   });
 
+  videoUrlEl.addEventListener('input', renderUrlNote);
+  videoUrlEl.addEventListener('change', renderUrlNote);
+
   captionSwitch.addEventListener('click', function () {
     state.captionOn = !state.captionOn;
     paintOptions();
@@ -1549,6 +1647,7 @@
 
     paintOptions();
     textCountEl.textContent = Array.from(productTextEl.value).length + '자';
+    renderUrlNote();
   })();
 })();
 </script>
