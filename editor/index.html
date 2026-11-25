@@ -170,7 +170,7 @@
   .tab[aria-selected=true]{color:var(--ink);background:var(--bg-2)}
   .tab[aria-selected=true]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
   .tab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:5px;vertical-align:2px}
-  .panes{padding:16px 16px 22px;max-height:calc(100vh - 150px);overflow-y:auto}
+  .panes{padding:16px 16px 22px;max-height:calc(100vh - 258px);overflow-y:auto}
   .pane[hidden]{display:none}
   .pane > section + section{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
   .pane h3{margin:0 0 10px;font-size:13.5px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
@@ -247,6 +247,11 @@
   .drop.small .ic{font-size:18px}
   .drop.small .t{font-size:12.5px;margin:0}
   .drop.small .s{font-size:11px;margin:1px 0 0}
+  /* 영상이 이미 올라갔을 땐 드롭존을 한 줄로 접어 컷 목록이 먼저 보이게 */
+  .drop.compact{padding:11px 12px;display:flex;align-items:center;gap:10px;text-align:left}
+  .drop.compact .ic{font-size:18px}
+  .drop.compact .t{margin:0;font-size:12.5px}
+  .drop.compact .s{display:none}
 
   /* clip list */
   .clip-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
@@ -277,60 +282,6 @@
   .clip-thumb.jumpable{cursor:pointer}
   .clip-thumb.jumpable:hover{outline:2px solid var(--accent);outline-offset:1px}
   .clip-meta .tag.src{background:var(--accent-soft);color:var(--accent-ink)}
-
-  /* 소스 뷰어 (통영상에서 구간 따기) */
-  .src-panel{display:flex;flex-direction:column;gap:9px}
-  .src-pick{display:flex;gap:6px;align-items:center}
-  .src-pick select{flex:1;min-width:0;padding:7px 9px;font-size:12.5px;font-weight:700}
-  .src-pick .btn{flex:0 0 auto}
-  .src-video-wrap{
-    position:relative;background:#120E10;border-radius:13px;overflow:hidden;
-    display:flex;align-items:center;justify-content:center;height:200px;border:1px solid var(--line);
-  }
-  .src-video-wrap.over{outline:2px dashed var(--accent);outline-offset:-3px}
-  #srcVideo{width:100%;height:100%;object-fit:contain;background:#120E10;display:block}
-  .src-video-empty{
-    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:5px;text-align:center;padding:18px;font-size:12px;color:#C9B4B9;pointer-events:none;line-height:1.5;
-  }
-  .src-video-empty .big{font-size:26px}
-  .src-sound{
-    position:absolute;right:8px;top:8px;width:30px;height:30px;border-radius:50%;border:none;
-    background:rgba(0,0,0,.55);color:#fff;cursor:pointer;font-size:13px;line-height:1;z-index:2;
-  }
-  .src-time-row{display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums;min-height:20px}
-  .src-time{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ink)}
-  .src-dur{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
-  .src-sel{margin-left:auto;font-size:11px;font-weight:800;color:var(--ink-3);text-align:right}
-  .src-scrub-wrap{position:relative;padding-bottom:2px}
-  #srcScrub{width:100%;height:26px}
-  #srcScrub::-webkit-slider-runnable-track{height:10px;border-radius:99px;background:var(--bg-2);border:1px solid var(--line-2)}
-  #srcScrub::-webkit-slider-thumb{width:18px;height:18px;margin-top:-5px}
-  .src-rangebar{position:relative;height:6px;margin:-6px 9px 0;border-radius:99px}
-  .src-rangebar .fill{position:absolute;top:0;height:100%;background:var(--accent);opacity:.8;border-radius:99px}
-  .src-rangebar i{position:absolute;top:-3px;width:2px;height:12px;background:var(--accent-ink);border-radius:2px}
-  .src-cutmarks{position:relative;height:8px;margin:5px 9px 0}
-  .src-cutmarks i{position:absolute;top:0;width:2px;height:8px;background:var(--ok);border-radius:1px;opacity:.85}
-  .src-ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-  .src-speed{flex:0 0 auto;width:126px}
-  .src-speed button{padding:6px 4px;font-size:11.5px}
-  .src-jumps{display:flex;gap:4px;margin-left:auto}
-  .src-jumps button{
-    border:1px solid var(--line-2);background:var(--card-2);border-radius:8px;padding:5px 7px;
-    font-size:11.5px;font-weight:700;cursor:pointer;color:var(--ink-2);font-variant-numeric:tabular-nums;
-  }
-  .src-jumps button:hover{border-color:var(--accent);color:var(--accent-ink)}
-  .src-jumps button:active{transform:translateY(1px)}
-  .src-inout{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .src-inout label{font-size:10.5px;font-weight:700;color:var(--ink-3);display:flex;flex-direction:column;gap:3px}
-  .src-inout input{padding:6px 7px;font-size:12.5px;border-radius:8px;font-family:var(--mono)}
-  .src-inout .btn{padding:7px 8px;font-size:12px}
-  .kbd-badge{
-    display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;
-    border-radius:5px;background:rgba(255,255,255,.22);font-family:var(--mono);font-size:10.5px;font-weight:800;
-  }
-  .btn.ghost .kbd-badge,.btn .kbd-badge{background:var(--bg-2);color:var(--ink-2)}
-  .btn.accent .kbd-badge,.btn.primary .kbd-badge{background:rgba(255,255,255,.22);color:#fff}
 
   /* subtitle list */
   .sub-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:7px;max-height:420px;overflow-y:auto;padding-right:2px}
@@ -443,11 +394,58 @@
     .panes{max-height:none}
   }
   @media (max-width:560px){
+    .steps button{font-size:10px;padding:6px 2px}
+    .aicard{margin:10px 10px 0;padding:12px 12px 11px}
     .topbar{padding:10px 12px;gap:8px}
+    .topbar .back{white-space:nowrap;flex:0 0 auto;padding:7px 9px}
+    .brand{white-space:nowrap;min-width:0;overflow:hidden;font-size:15px;gap:6px}
+    .brand strong{white-space:nowrap}
+    .top-actions .status{display:none}
     .topbar .brand .who{display:none}
     .layout{padding:12px 12px 60px;gap:14px}
     .panes{padding:13px 13px 18px}
+    .pane h3{font-size:13px}
+    .pane h3 .opt{font-size:10.5px}
   }
+  /* 접이식 세부 조절 */
+  details.more{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--card-2);padding:0 12px 12px}
+  details.more > summary{
+    list-style:none;cursor:pointer;padding:10px 0;font-size:12.5px;font-weight:800;color:var(--ink-2);
+    display:flex;align-items:center;gap:6px;
+  }
+  details.more > summary::-webkit-details-marker{display:none}
+  details.more > summary::before{content:"⚙";font-size:11px;opacity:.55}
+  details.more > summary::after{content:"▾";margin-left:auto;font-size:10px;color:var(--ink-3);transition:transform .15s}
+  details.more[open] > summary::after{transform:rotate(180deg)}
+  details.more > summary:hover{color:var(--accent-ink)}
+  details.more[open] > summary{border-bottom:1px solid var(--line);margin-bottom:11px}
+  details.more .field{margin-top:11px}
+  details.more .more-h{margin:14px 0 7px;font-size:11.5px;font-weight:800;color:var(--ink-3)}
+  .opt-inline{font-size:10.5px;font-weight:700;color:var(--ink-3)}
+
+  /* AI 카드 진행 순서 */
+  .steps{display:flex;gap:5px;margin:0 0 11px;padding:0;list-style:none}
+  .steps li{flex:1 1 0;min-width:0}
+  .steps button{
+    width:100%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#D9AFBE;
+    border-radius:9px;padding:6px 3px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  .steps button:hover{border-color:rgba(255,255,255,.3);color:#fff}
+  .steps button.done{border-color:rgba(143,240,192,.45);background:rgba(143,240,192,.14);color:#8FF0C0}
+  .steps button.done::before{content:"✓ "}
+  .ai-key-wrap{margin-top:9px;border-top:1px solid rgba(255,255,255,.1)}
+  .ai-key-wrap > summary{
+    list-style:none;cursor:pointer;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);
+    padding:8px 0 0;display:flex;align-items:center;gap:5px;
+  }
+  .ai-key-wrap > summary::-webkit-details-marker{display:none}
+  .ai-key-wrap > summary::after{content:"▾";font-size:9px;opacity:.7}
+  .ai-key-wrap[open] > summary{color:rgba(255,255,255,.78)}
+  .ai-key-wrap .opt-inline{color:rgba(255,255,255,.34)}
+  .btn.wide.big{padding:13px 12px;font-size:14.5px;font-weight:900;border-radius:12px;margin-top:12px}
+
   @media (prefers-reduced-motion: reduce){*{animation-duration:.001s !important;transition-duration:.001s !important}}
 </style>
 </head>
@@ -493,123 +491,89 @@
     <section class="aicard" aria-label="AI 자동 편집">
       <div class="ai-head">
         <span class="ai-badge">AI</span>
-        <span class="ai-title">영상 · 대본 · 나레이션 넣고<br><b>버튼 한 번</b>으로 컷 · 자막 · 효과음까지</span>
+        <span class="ai-title">영상 · 대본 · 나레이션 넣고 <b>버튼 한 번</b>으로 컷 · 자막 · 효과음까지</span>
       </div>
+      <ul class="steps" id="aiSteps" aria-label="진행 순서">
+        <li><button type="button" data-pane="clips" data-step="clips">① 영상</button></li>
+        <li><button type="button" data-pane="script" data-step="script">② 대본</button></li>
+        <li><button type="button" data-pane="audio" data-step="audio">③ 나레이션</button></li>
+        <li><button type="button" data-pane="export" data-step="export">④ 내보내기</button></li>
+      </ul>
       <button class="btn ai-run" id="btnAiEdit" type="button">✨ AI 자동 편집하기</button>
       <div class="ai-progress" id="aiProgressWrap" hidden><i id="aiProgressBar"></i></div>
-      <p class="ai-status" id="aiStatus">① 영상 → ② 대본 → ③ 나레이션 순서로 넣고 눌러 주세요.</p>
-      <div class="ai-key">
-        <input type="password" id="aiKey" placeholder="Gemini API 키 (선택 · 없으면 스마트 폴백)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Gemini API 키" />
-        <button class="btn ghost sm" id="btnAiKeySave" type="button">키 저장</button>
-      </div>
-      <p class="ai-keynote" id="aiKeyHint">키는 이 브라우저에만 저장돼요 (③ 오디오 TTS와 같은 키)</p>
+      <p class="ai-status" id="aiStatus">① 영상 → ② 대본 → ③ 나레이션 넣고 눌러 주세요.</p>
+      <details class="ai-key-wrap">
+        <summary>Gemini API 키 <span class="opt-inline">선택</span></summary>
+        <div class="ai-key">
+          <input type="password" id="aiKey" placeholder="없으면 스마트 폴백으로 편집" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Gemini API 키" />
+          <button class="btn ghost sm" id="btnAiKeySave" type="button">키 저장</button>
+        </div>
+        <p class="ai-keynote" id="aiKeyHint">키는 이 브라우저에만 저장돼요 (③ AI 음성과 같은 키)</p>
+      </details>
     </section>
 
     <nav class="tabs" role="tablist" aria-label="편집 패널">
-      <button class="tab" role="tab" id="tab-clips" aria-controls="pane-clips" aria-selected="true" data-pane="clips">① 클립 <span class="dot" id="dotClips" hidden></span></button>
-      <button class="tab" role="tab" id="tab-script" aria-controls="pane-script" aria-selected="false" data-pane="script">② 대본·자막</button>
+      <button class="tab" role="tab" id="tab-clips" aria-controls="pane-clips" aria-selected="true" data-pane="clips">① 영상 <span class="dot" id="dotClips" hidden></span></button>
+      <button class="tab" role="tab" id="tab-script" aria-controls="pane-script" aria-selected="false" data-pane="script">② 대본</button>
       <button class="tab" role="tab" id="tab-audio" aria-controls="pane-audio" aria-selected="false" data-pane="audio">③ 오디오</button>
       <button class="tab" role="tab" id="tab-style" aria-controls="pane-style" aria-selected="false" data-pane="style">④ 스타일</button>
       <button class="tab" role="tab" id="tab-export" aria-controls="pane-export" aria-selected="false" data-pane="export">⑤ 내보내기</button>
     </nav>
 
     <div class="panes">
-      <!-- ① 클립 -->
+      <!-- ① 영상 -->
       <div class="pane" id="pane-clips" role="tabpanel" aria-labelledby="tab-clips">
-        <section id="srcSection">
-          <h3><span class="num">1</span> 통영상에서 컷 따기 <span class="opt">소스 뷰어</span></h3>
-          <div class="src-panel">
-            <div class="src-pick">
-              <select id="srcPick" aria-label="소스 영상 선택"></select>
-              <button class="btn sm" id="btnSrcUpload" type="button" title="소스 영상 올리기">＋ 영상</button>
-              <input id="srcInput" type="file" accept="video/*,.mp4,.mov,.m4v,.webm" hidden />
-            </div>
-            <div class="src-video-wrap" id="srcVideoWrap">
-              <video id="srcVideo" playsinline preload="metadata" muted aria-label="소스 영상 뷰어"></video>
-              <div class="src-video-empty" id="srcVideoEmpty">
-                <span class="big" aria-hidden="true">🎬</span>
-                <span><b>5분 통영상 하나</b>를 올려 두고,<br />쓸 구간만 톡톡 찍어 담아요</span>
-              </div>
-              <button class="src-sound" id="srcSound" type="button" aria-pressed="false" title="소리 켜기/끄기">🔇</button>
-            </div>
-            <div class="src-time-row">
-              <span class="src-time" id="srcTime">0:00.0</span>
-              <span class="src-dur" id="srcDur">/ 0:00.0</span>
-              <span class="src-sel" id="srcSel">구간 없음</span>
-            </div>
-            <div class="src-scrub-wrap">
-              <input id="srcScrub" type="range" min="0" max="1" step="0.01" value="0" aria-label="소스 영상 위치" />
-              <div class="src-rangebar"><span class="fill" id="srcFill" hidden></span><i id="srcInMark" hidden></i><i id="srcOutMark" hidden></i></div>
-              <div class="src-cutmarks" id="srcCutmarks" aria-hidden="true"></div>
-            </div>
-            <div class="src-ctrl">
-              <button class="btn primary sm" id="srcPlay" type="button" aria-label="소스 재생">▶</button>
-              <div class="seg src-speed" id="srcSpeed" role="group" aria-label="훑어보기 배속">
-                <button type="button" data-r="1" aria-pressed="true">1x</button>
-                <button type="button" data-r="2" aria-pressed="false">2x</button>
-                <button type="button" data-r="4" aria-pressed="false">4x</button>
-              </div>
-              <div class="src-jumps">
-                <button type="button" data-j="-5" title="5초 뒤로">-5초</button>
-                <button type="button" data-j="-0.5" title="0.5초 뒤로">-0.5초</button>
-                <button type="button" data-j="0.5" title="0.5초 앞으로">+0.5초</button>
-                <button type="button" data-j="5" title="5초 앞으로">+5초</button>
-              </div>
-            </div>
-            <div class="src-inout">
-              <label>시작점<input type="number" id="srcIn" min="0" step="0.1" inputmode="decimal" aria-label="컷 시작점" /></label>
-              <label>끝점<input type="number" id="srcOut" min="0" step="0.1" inputmode="decimal" aria-label="컷 끝점" /></label>
-              <button class="btn sm" id="srcMarkIn" type="button">I 시작점</button>
-              <button class="btn sm" id="srcMarkOut" type="button">O 끝점</button>
-            </div>
-            <button class="btn accent wide" id="srcAddCut" type="button">＋ 컷 추가 <span class="kbd-badge">A</span></button>
-            <div class="row wrap" style="gap:6px">
-              <button class="btn sm" id="srcQuick25" type="button">지금부터 2.5초 담기</button>
-              <button class="btn sm" id="srcQuick30" type="button">지금부터 3초 담기</button>
-              <button class="btn ghost sm" id="srcPlaySel" type="button">구간만 재생</button>
-            </div>
-            <p class="hint">영상 보면서 <b>I</b>로 시작, <b>O</b>로 끝을 찍고 <b>A</b>(또는 <b>Enter</b>)를 누르면 아래 클립 목록에 컷이 차례로 쌓여요. 2x·4x로 훑으면서 <b>지금부터 2.5초 담기</b>를 연타하면 하이라이트를 금방 모아요. 초록 눈금은 이 소스에서 이미 담은 구간이에요.</p>
-          </div>
-        </section>
         <section>
-          <h3><span class="num">2</span> 영상 클립 <span class="opt">mp4 · mov · webm</span></h3>
-          <div class="drop" id="clipDrop" role="button" tabindex="0" aria-label="영상 클립 선택">
+          <h3>영상 올리기 <span class="opt">mp4 · mov · webm</span></h3>
+          <div class="drop" id="clipDrop" role="button" tabindex="0" aria-label="영상 파일 선택">
             <input id="clipInput" type="file" accept="video/*,.mp4,.mov,.webm,.m4v" multiple hidden />
             <div class="ic" aria-hidden="true">🎞️</div>
-            <div class="t">클립을 끌어다 놓거나 눌러서 고르기</div>
-            <div class="s">여러 개 한 번에 · 9:16으로 자동 센터 크롭</div>
+            <div class="t">영상 끌어다 놓거나 눌러서 고르기</div>
+            <div class="s">5분 통영상 하나면 충분해요 · 여러 개도 한 번에</div>
           </div>
-          <div class="row wrap" style="margin-top:9px">
-            <button class="btn ghost sm" id="btnSortClips" type="button">길이순 정렬</button>
-            <button class="btn ghost sm" id="btnClearClips" type="button">전체 비우기</button>
-            <button class="btn ghost sm" id="btnFitClips" type="button">나레이션 길이에 맞추기</button>
-          </div>
-          <p class="hint">순서는 카드의 ↑↓ 또는 드래그로 바꿔요. 구간(시작·끝)은 초 단위, 배속은 1.0~1.5x. 화면은 잘리지 않게 가운데 기준으로 9:16에 꽉 채워요.</p>
-          <p class="hint">아이폰 기본 .mov(HEVC)는 PC 브라우저가 못 여는 경우가 있어요. 그럴 땐 사진 앱에서 <b>H.264(.mp4)</b>로 내보내거나, 클립을 mp4로 변환해 올려 주세요.</p>
+          <p class="hint">아이폰 기본 .mov(HEVC)가 안 열리면 사진 앱에서 <b>H.264(.mp4)</b>로 내보내 주세요.</p>
+        </section>
+        <section>
+          <h3>컷 목록 <span class="opt" id="clipCount">비어 있음</span></h3>
           <ul class="clip-list" id="clipList"></ul>
+          <details class="more">
+            <summary>컷 정리 도구</summary>
+            <div class="row wrap">
+              <button class="btn ghost sm" id="btnSortClips" type="button">길이순 정렬</button>
+              <button class="btn ghost sm" id="btnFitClips" type="button">나레이션 길이에 맞추기</button>
+              <button class="btn ghost sm" id="btnClearClips" type="button">전체 비우기</button>
+            </div>
+            <p class="hint">순서는 카드의 ↑↓ 또는 드래그로 바꾸고, 구간은 시작·끝 초로 고쳐요. 화면은 잘리지 않게 9:16 가운데 크롭이에요.</p>
+          </details>
         </section>
       </div>
 
       <!-- ② 대본 -->
       <div class="pane" id="pane-script" role="tabpanel" aria-labelledby="tab-script" hidden>
         <section>
-          <h3><span class="num">2</span> 대본 → 자막 <span class="opt">붙여넣기</span></h3>
-          <textarea id="scriptInput" rows="7" class="code" placeholder="[0~3초 / 후킹] 다이소 5천원짜리가 이 퀄리티?!
+          <h3>대본 입력 <span class="opt">붙여넣기</span></h3>
+          <textarea id="scriptInput" rows="8" class="code" placeholder="[0~3초 / 후킹] 다이소 5천원짜리가 이 퀄리티?!
 [3~6초] 진짜 이거 하나면 아침 준비 3분 컷이에요
 [6~9초] 발림성 미쳤고요, 끈적임 없이 스르륵
 ..." aria-label="대본 붙여넣기"></textarea>
           <div class="row wrap" style="margin-top:9px">
-            <button class="btn primary sm" id="btnParse" type="button">자막으로 나누기</button>
+            <button class="btn primary" id="btnParse" type="button">자막으로 나누기</button>
             <button class="btn sm" id="btnHookToTitle" type="button">첫 줄 → 오프닝 타이틀</button>
-            <button class="btn ghost sm" id="btnRedistribute" type="button">타임라인에 자동 배분</button>
-            <button class="btn ghost sm" id="btnAddSub" type="button">+ 자막 한 줄</button>
           </div>
-          <p class="hint" id="parseReport">대본을 붙여넣고 <b>자막으로 나누기</b>를 누르면 <code>[0~3초 / 후킹]</code> 같은 타임코드·지문만 지우고 <b>엔터로 나눈 줄 그대로 1줄 = 1자막</b>으로 만들어 전체 길이에 맞춰 배분해요. 긴 줄은 화면에서 2줄로 자동 줄바꿈돼요.</p>
+          <p class="hint" id="parseReport">엔터로 나눈 줄 그대로 <b>1줄 = 1자막</b>으로 만들고, 타임코드·지문은 지워요.</p>
+          <details class="more">
+            <summary>자막 세부 도구</summary>
+            <div class="row wrap">
+              <button class="btn ghost sm" id="btnRedistribute" type="button">타임라인에 자동 배분</button>
+              <button class="btn ghost sm" id="btnAddSub" type="button">+ 자막 한 줄</button>
+            </div>
+            <p class="hint">긴 줄은 화면에서 2줄로 자동 줄바꿈돼요.</p>
+          </details>
         </section>
         <section>
-          <h3>자막 블록 <span class="opt" id="subCount">0개</span></h3>
+          <h3>자막 <span class="opt" id="subCount">0개</span></h3>
           <div class="row" style="justify-content:space-between;margin-bottom:8px">
-            <span class="hint" style="margin:0">색은 블록마다 바꿀 수 있어요.</span>
+            <span class="hint" style="margin:0">블록마다 색을 바꿀 수 있어요.</span>
             <button class="btn ghost sm" id="btnAllYellow" type="button">전체 노랑</button>
           </div>
           <ol class="sub-list" id="subList"></ol>
@@ -619,7 +583,7 @@
       <!-- ③ 오디오 -->
       <div class="pane" id="pane-audio" role="tabpanel" aria-labelledby="tab-audio" hidden>
         <section>
-          <h3><span class="num">3</span> 나레이션 <span class="opt">mp3 · m4a · wav · mp4</span></h3>
+          <h3>나레이션 <span class="opt">mp3 · m4a · wav · mp4</span></h3>
           <div class="drop small" id="narrDrop" role="button" tabindex="0" aria-label="나레이션 파일 선택">
             <input id="narrInput" type="file" accept="audio/*,video/*,.mp3,.m4a,.wav,.aac,.ogg,.mp4,.mov,.m4v,.webm" hidden />
             <span class="ic" aria-hidden="true">🎙️</span>
@@ -632,105 +596,112 @@
             <span><i style="background:var(--accent)"></i>남김</span>
             <span><i style="background:#E7DAD6"></i>잘라낸 무음</span>
           </div>
-          <div class="grid2" style="margin-top:10px">
-            <div class="field" style="margin:0">
-              <div class="lbl-row"><span class="lbl">무음 기준</span><output class="v" id="thOut">-38dB</output></div>
-              <input type="range" id="thRange" min="-60" max="-15" step="1" value="-38" />
-            </div>
-            <div class="field" style="margin:0">
-              <div class="lbl-row"><span class="lbl">최소 무음</span><output class="v" id="minOut">0.24초</output></div>
-              <input type="range" id="minRange" min="0.08" max="0.8" step="0.02" value="0.24" />
-            </div>
-          </div>
-          <label class="switch" style="margin-top:10px"><input type="checkbox" id="cutToggle" checked /> 무음 구간 자동 컷 (점프컷)</label>
-          <p class="hint">캡컷 <b>텍스트 음성(TTS)</b>으로 만든 mp3·m4a·wav를 그대로 올려도 되고, TTS를 넣어 내보낸 <b>mp4·mov 영상</b>을 올려도 소리만 뽑아서 똑같이 무음컷·파형 분석·믹싱해요.</p>
-          <label class="switch" style="margin-top:8px"><input type="checkbox" id="fitToggle" checked /> 영상 길이를 나레이션에 맞추기</label>
-          <div class="row" style="margin-top:9px">
-            <button class="btn sm" id="btnAnalyze" type="button">다시 분석</button>
-            <button class="btn ghost sm" id="btnNarrClear" type="button">나레이션 빼기</button>
-          </div>
           <div class="stats" id="narrStats" style="margin-top:10px"></div>
+          <details class="more">
+            <summary>무음 컷 세부 조절</summary>
+            <div class="grid2">
+              <div class="field" style="margin:0">
+                <div class="lbl-row"><span class="lbl">무음 기준</span><output class="v" id="thOut">-38dB</output></div>
+                <input type="range" id="thRange" min="-60" max="-15" step="1" value="-38" />
+              </div>
+              <div class="field" style="margin:0">
+                <div class="lbl-row"><span class="lbl">최소 무음</span><output class="v" id="minOut">0.24초</output></div>
+                <input type="range" id="minRange" min="0.08" max="0.8" step="0.02" value="0.24" />
+              </div>
+            </div>
+            <label class="switch" style="margin-top:10px"><input type="checkbox" id="cutToggle" checked /> 무음 구간 자동 컷 (점프컷)</label>
+            <label class="switch" style="margin-top:8px"><input type="checkbox" id="fitToggle" checked /> 영상 길이를 나레이션에 맞추기</label>
+            <div class="row" style="margin-top:9px">
+              <button class="btn sm" id="btnAnalyze" type="button">다시 분석</button>
+              <button class="btn ghost sm" id="btnNarrClear" type="button">나레이션 빼기</button>
+            </div>
+            <p class="hint">캡컷 텍스트 음성(TTS)으로 만든 mp3·m4a·wav는 물론, TTS를 넣어 내보낸 mp4·mov도 소리만 뽑아 똑같이 처리해요.</p>
+          </details>
 
           <div class="tts-card" id="ttsCard">
             <h4>🎙️ 대본으로 AI 음성 만들기 <span class="opt">Gemini TTS</span></h4>
-            <div class="grid2">
-              <div class="field">
-                <label for="ttsVoice">목소리</label>
-                <select id="ttsVoice">
-                  <option value="Kore">Kore · 단단한 여성</option>
-                  <option value="Aoede">Aoede · 밝고 가벼운 여성</option>
-                  <option value="Leda">Leda · 젊고 산뜻한 여성</option>
-                  <option value="Zephyr">Zephyr · 맑고 또렷한 여성</option>
-                  <option value="Puck">Puck · 활기찬 톤</option>
-                  <option value="Charon">Charon · 낮고 차분한 남성</option>
-                  <option value="Fenrir">Fenrir · 힘 있는 남성</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="ttsKey">Gemini API 키</label>
-                <input id="ttsKey" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza..." />
-              </div>
-            </div>
-            <div class="row wrap" style="margin-top:6px">
-              <button class="btn ghost sm" id="btnTtsKeySave" type="button">키 저장</button>
-              <button class="btn ghost sm" id="btnTtsKeyClear" type="button" hidden>키 삭제</button>
-              <span class="hint" id="ttsKeyNote" style="margin:0">키 없음 · 대본 스튜디오와 같은 키를 써요</span>
-            </div>
-            <div class="field">
-              <label for="ttsTone">톤·속도 지시문</label>
-              <textarea id="ttsTone" rows="2">20대 한국인 여성 뷰티 크리에이터처럼 밝고 또박또박, 약간 빠른 릴스 템포로 읽어줘:</textarea>
+            <div class="field" style="margin-top:8px">
+              <label for="ttsVoice">목소리</label>
+              <select id="ttsVoice">
+                <option value="Kore">Kore · 단단한 여성</option>
+                <option value="Aoede">Aoede · 밝고 가벼운 여성</option>
+                <option value="Leda">Leda · 젊고 산뜻한 여성</option>
+                <option value="Zephyr">Zephyr · 맑고 또렷한 여성</option>
+                <option value="Puck">Puck · 활기찬 톤</option>
+                <option value="Charon">Charon · 낮고 차분한 남성</option>
+                <option value="Fenrir">Fenrir · 힘 있는 남성</option>
+              </select>
             </div>
             <div class="field">
               <div class="lbl-row"><span class="lbl">읽을 대본</span><span class="hint" id="ttsSrcNote" style="margin:0">② 대본 자막에서 가져옴</span></div>
-              <textarea id="ttsText" rows="5" placeholder="② 대본·자막에서 자막을 만들면 여기 자동으로 채워져요. 직접 고쳐도 돼요."></textarea>
+              <textarea id="ttsText" rows="4" placeholder="② 대본·자막에서 자막을 만들면 여기 자동으로 채워져요. 직접 고쳐도 돼요."></textarea>
               <div class="row wrap" style="margin-top:6px">
                 <button class="btn ghost sm" id="btnTtsFromSubs" type="button">자막에서 다시 가져오기</button>
                 <span class="hint" id="ttsCount" style="margin:0">0자</span>
               </div>
             </div>
             <button class="btn primary wide" id="btnTtsGen" type="button">🎙️ 음성 만들기</button>
-            <p class="hint" id="ttsStatus">만들면 나레이션 트랙에 바로 올라가요 (무음컷·영상 길이 맞춤까지 자동).</p>
+            <p class="hint" id="ttsStatus">만들면 나레이션에 바로 올라가요 (무음컷·길이 맞춤까지 자동).</p>
             <div id="ttsResult" hidden>
               <div class="row wrap" style="margin-top:8px">
                 <button class="btn sm" id="btnTtsDownload" type="button">.wav 다운로드</button>
                 <span class="hint" id="ttsResultNote" style="margin:0"></span>
               </div>
             </div>
+            <details class="more" style="margin-top:10px">
+              <summary>톤 · Gemini 키 설정</summary>
+              <div class="field" style="margin-top:0">
+                <label for="ttsTone">톤·속도 지시문</label>
+                <textarea id="ttsTone" rows="2">20대 한국인 여성 뷰티 크리에이터처럼 밝고 또박또박, 약간 빠른 릴스 템포로 읽어줘:</textarea>
+              </div>
+              <div class="field">
+                <label for="ttsKey">Gemini API 키</label>
+                <input id="ttsKey" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza..." />
+              </div>
+              <div class="row wrap">
+                <button class="btn ghost sm" id="btnTtsKeySave" type="button">키 저장</button>
+                <button class="btn ghost sm" id="btnTtsKeyClear" type="button" hidden>키 삭제</button>
+                <span class="hint" id="ttsKeyNote" style="margin:0">키 없음 · 대본 스튜디오와 같은 키를 써요</span>
+              </div>
+            </details>
           </div>
         </section>
         <section>
-          <h3>효과음 (SFX) <span class="opt" id="sfxCount">자동</span></h3>
-          <label class="switch"><input type="checkbox" id="sfxToggle" checked /> 효과음 자동 넣기</label>
-          <div class="field">
-            <div class="lbl-row"><span class="lbl">효과음 볼륨</span><output class="v" id="sfxOut">55%</output></div>
-            <input type="range" id="sfxRange" min="0" max="1" step="0.01" value="0.55" aria-label="효과음 볼륨" />
-          </div>
-          <div class="sfx-grid" id="sfxPreview">
-            <button class="btn ghost sm" type="button" data-sfx="pop"><span class="em">💥</span>톡! 팝</button>
-            <button class="btn ghost sm" type="button" data-sfx="whoosh"><span class="em">🌬️</span>휙~ 휘시</button>
-            <button class="btn ghost sm" type="button" data-sfx="sparkle"><span class="em">✨</span>반짝</button>
-            <button class="btn ghost sm" type="button" data-sfx="ding"><span class="em">🔔</span>딩동</button>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <button class="btn sm" id="btnSfxAuto" type="button">효과음 자동 배치</button>
-            <button class="btn ghost sm" id="btnSfxClear" type="button">효과음 끄기</button>
-          </div>
-          <p class="hint">오프닝 <b>톡!</b>, 컷 전환 <b>휙~</b>, 소구점 <b>반짝✨</b>, 할인·마무리 <b>딩동</b>이 자동으로 깔리고 미리보기·MP4·WAV에 똑같이 섞여요.</p>
-          <div class="stats" id="sfxStats" style="margin-top:10px"></div>
-        </section>
-        <section>
-          <h3>BGM <span class="opt">선택</span></h3>
-          <div class="drop small" id="bgmDrop" role="button" tabindex="0" aria-label="BGM 파일 선택">
-            <input id="bgmInput" type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg" hidden />
-            <span class="ic" aria-hidden="true">🎵</span>
-            <span><span class="t" id="bgmName">BGM 올리기</span><span class="s">영상 길이에 맞춰 반복 재생</span></span>
-          </div>
-          <div class="field">
-            <div class="lbl-row"><span class="lbl">BGM 볼륨</span><output class="v" id="bgmOut">22%</output></div>
-            <input type="range" id="bgmRange" min="0" max="1" step="0.01" value="0.22" />
-          </div>
-          <button class="btn ghost sm" id="btnBgmClear" type="button">BGM 빼기</button>
-          <p class="hint">내보내기 오디오는 <b>나레이션 + BGM</b>만 합쳐요. 클립 원본 소리는 넣지 않아요.</p>
+          <h3>효과음 · BGM <span class="opt" id="sfxCount">자동</span></h3>
+          <label class="switch"><input type="checkbox" id="sfxToggle" checked /> 효과음 자동으로 깔기</label>
+          <div class="stats" id="sfxStats" style="margin-top:8px"></div>
+          <details class="more">
+            <summary>효과음 세부 조절</summary>
+            <div class="field" style="margin-top:0">
+              <div class="lbl-row"><span class="lbl">효과음 볼륨</span><output class="v" id="sfxOut">55%</output></div>
+              <input type="range" id="sfxRange" min="0" max="1" step="0.01" value="0.55" aria-label="효과음 볼륨" />
+            </div>
+            <div class="sfx-grid" id="sfxPreview">
+              <button class="btn ghost sm" type="button" data-sfx="pop"><span class="em">💥</span>톡! 팝</button>
+              <button class="btn ghost sm" type="button" data-sfx="whoosh"><span class="em">🌬️</span>휙~ 휘시</button>
+              <button class="btn ghost sm" type="button" data-sfx="sparkle"><span class="em">✨</span>반짝</button>
+              <button class="btn ghost sm" type="button" data-sfx="ding"><span class="em">🔔</span>딩동</button>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <button class="btn sm" id="btnSfxAuto" type="button">효과음 자동 배치</button>
+              <button class="btn ghost sm" id="btnSfxClear" type="button">효과음 끄기</button>
+            </div>
+            <p class="hint">오프닝 <b>톡!</b>, 컷 전환 <b>휙~</b>, 소구점 <b>반짝✨</b>, 마무리 <b>딩동</b>이 자동으로 깔려요.</p>
+          </details>
+          <details class="more">
+            <summary>BGM 넣기 <span class="opt-inline">선택</span></summary>
+            <div class="drop small" id="bgmDrop" role="button" tabindex="0" aria-label="BGM 파일 선택">
+              <input id="bgmInput" type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg" hidden />
+              <span class="ic" aria-hidden="true">🎵</span>
+              <span><span class="t" id="bgmName">BGM 올리기</span><span class="s">영상 길이에 맞춰 반복 재생</span></span>
+            </div>
+            <div class="field">
+              <div class="lbl-row"><span class="lbl">BGM 볼륨</span><output class="v" id="bgmOut">22%</output></div>
+              <input type="range" id="bgmRange" min="0" max="1" step="0.01" value="0.22" />
+            </div>
+            <button class="btn ghost sm" id="btnBgmClear" type="button">BGM 빼기</button>
+            <p class="hint">내보내기 오디오는 <b>나레이션 + BGM</b>만 합쳐요. 클립 원본 소리는 넣지 않아요.</p>
+          </details>
           <p class="hint" id="masterInfo" style="margin-top:8px;font-family:var(--mono);font-size:10.5px">오디오 없음</p>
         </section>
       </div>
@@ -738,7 +709,7 @@
       <!-- ④ 스타일 -->
       <div class="pane" id="pane-style" role="tabpanel" aria-labelledby="tab-style" hidden>
         <section>
-          <h3><span class="num">4</span> 오프닝 타이틀 <span class="opt">0~2초 후킹</span></h3>
+          <h3>오프닝 타이틀 <span class="opt">0~2초 후킹</span></h3>
           <label class="switch"><input type="checkbox" id="titleOn" /> 타이틀 보이기</label>
           <div class="field">
             <label for="titleText">문구 (2줄까지)</label>
@@ -770,39 +741,42 @@
             <div class="chips" id="titleColorChips"></div>
             <label class="pick"><input type="color" id="titleColorPick" value="#FFFFFF" aria-label="타이틀 글자색 직접 고르기" /><span>직접 고르기</span></label>
           </div>
-          <div class="field">
-            <span class="lbl">외곽선색</span>
-            <div class="chips" id="titleOutlineChips"></div>
-            <label class="pick"><input type="color" id="titleOutlinePick" value="#1F1412" aria-label="타이틀 외곽선색 직접 고르기" /><span>직접 고르기</span></label>
-          </div>
-          <div class="grid2">
-            <div class="field">
-              <div class="lbl-row"><span class="lbl">크기</span><output class="v" id="titleScaleOut">1.00x</output></div>
-              <input type="range" id="titleScale" min="0.7" max="1.4" step="0.02" value="1" />
+          <details class="more">
+            <summary>타이틀 세부 조절</summary>
+            <div class="field" style="margin-top:0">
+              <span class="lbl">외곽선색</span>
+              <div class="chips" id="titleOutlineChips"></div>
+              <label class="pick"><input type="color" id="titleOutlinePick" value="#1F1412" aria-label="타이틀 외곽선색 직접 고르기" /><span>직접 고르기</span></label>
             </div>
-            <div class="field">
-              <div class="lbl-row"><span class="lbl">길이</span><output class="v" id="titleDurOut">0.0~2.0초</output></div>
-              <div class="row">
-                <input type="number" id="titleStart" min="0" step="0.1" value="0" aria-label="타이틀 시작" />
-                <input type="number" id="titleEnd" min="0" step="0.1" value="2" aria-label="타이틀 끝" />
+            <div class="grid2">
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">크기</span><output class="v" id="titleScaleOut">1.00x</output></div>
+                <input type="range" id="titleScale" min="0.7" max="1.4" step="0.02" value="1" />
+              </div>
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">길이</span><output class="v" id="titleDurOut">0.0~2.0초</output></div>
+                <div class="row">
+                  <input type="number" id="titleStart" min="0" step="0.1" value="0" aria-label="타이틀 시작" />
+                  <input type="number" id="titleEnd" min="0" step="0.1" value="2" aria-label="타이틀 끝" />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="grid2">
-            <div class="field">
-              <div class="lbl-row"><span class="lbl">자간</span><output class="v" id="titleSpacingOut">0px</output></div>
-              <input type="range" id="titleSpacing" min="-4" max="6" step="0.5" value="0" />
+            <div class="grid2">
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">자간</span><output class="v" id="titleSpacingOut">0px</output></div>
+                <input type="range" id="titleSpacing" min="-4" max="6" step="0.5" value="0" />
+              </div>
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">그림자 거리</span><output class="v" id="titleShadowDistOut">3px</output></div>
+                <input type="range" id="titleShadowDist" min="0" max="12" step="0.5" value="3" />
+              </div>
             </div>
             <div class="field">
-              <div class="lbl-row"><span class="lbl">그림자 거리</span><output class="v" id="titleShadowDistOut">3px</output></div>
-              <input type="range" id="titleShadowDist" min="0" max="12" step="0.5" value="3" />
+              <div class="lbl-row"><span class="lbl">그림자 흐림</span><output class="v" id="titleShadowBlurOut">6px</output></div>
+              <input type="range" id="titleShadowBlur" min="0" max="20" step="1" value="6" />
             </div>
-          </div>
-          <div class="field">
-            <div class="lbl-row"><span class="lbl">그림자 흐림</span><output class="v" id="titleShadowBlurOut">6px</output></div>
-            <input type="range" id="titleShadowBlur" min="0" max="20" step="1" value="6" />
-          </div>
-          <p class="hint">기본은 첫 2초만 나와요. 두 줄은 굵은 외곽선으로 자동 줄바꿈돼요.</p>
+            <p class="hint">기본은 첫 2초만 나와요. 두 줄은 굵은 외곽선으로 자동 줄바꿈돼요.</p>
+          </details>
         </section>
         <section>
           <h3>본편 자막 <span class="opt">하단 안전영역</span></h3>
@@ -825,80 +799,83 @@
             </div>
           </div>
           <div class="fontprev" id="subFontPrev">오늘도 화장 레벨업 중 ✨</div>
-          <div class="field">
-            <span class="lbl">외곽선색</span>
-            <div class="chips" id="subOutlineChips"></div>
-            <label class="pick"><input type="color" id="subOutlinePick" value="#1F1412" aria-label="자막 외곽선색 직접 고르기" /><span>직접 고르기</span></label>
-          </div>
-          <div class="grid2">
-            <div class="field">
-              <div class="lbl-row"><span class="lbl">크기</span><output class="v" id="subScaleOut">1.00x</output></div>
-              <input type="range" id="subScale" min="0.7" max="1.4" step="0.02" value="1" />
+          <details class="more">
+            <summary>자막 세부 조절</summary>
+            <div class="field" style="margin-top:0">
+              <span class="lbl">외곽선색</span>
+              <div class="chips" id="subOutlineChips"></div>
+              <label class="pick"><input type="color" id="subOutlinePick" value="#1F1412" aria-label="자막 외곽선색 직접 고르기" /><span>직접 고르기</span></label>
+            </div>
+            <div class="grid2">
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">크기</span><output class="v" id="subScaleOut">1.00x</output></div>
+                <input type="range" id="subScale" min="0.7" max="1.4" step="0.02" value="1" />
+              </div>
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">높이</span><output class="v" id="subYOut">76%</output></div>
+                <input type="range" id="subY" min="0.55" max="0.88" step="0.005" value="0.76" />
+              </div>
+            </div>
+            <div class="grid2">
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">자간</span><output class="v" id="subSpacingOut">0px</output></div>
+                <input type="range" id="subSpacing" min="-4" max="6" step="0.5" value="0" />
+              </div>
+              <div class="field">
+                <div class="lbl-row"><span class="lbl">그림자 거리</span><output class="v" id="subShadowDistOut">3px</output></div>
+                <input type="range" id="subShadowDist" min="0" max="12" step="0.5" value="3" />
+              </div>
             </div>
             <div class="field">
-              <div class="lbl-row"><span class="lbl">높이</span><output class="v" id="subYOut">76%</output></div>
-              <input type="range" id="subY" min="0.55" max="0.88" step="0.005" value="0.76" />
+              <div class="lbl-row"><span class="lbl">그림자 흐림</span><output class="v" id="subShadowBlurOut">6px</output></div>
+              <input type="range" id="subShadowBlur" min="0" max="20" step="1" value="6" />
             </div>
-          </div>
-          <div class="grid2">
-            <div class="field">
-              <div class="lbl-row"><span class="lbl">자간</span><output class="v" id="subSpacingOut">0px</output></div>
-              <input type="range" id="subSpacing" min="-4" max="6" step="0.5" value="0" />
-            </div>
-            <div class="field">
-              <div class="lbl-row"><span class="lbl">그림자 거리</span><output class="v" id="subShadowDistOut">3px</output></div>
-              <input type="range" id="subShadowDist" min="0" max="12" step="0.5" value="3" />
-            </div>
-          </div>
-          <div class="field">
-            <div class="lbl-row"><span class="lbl">그림자 흐림</span><output class="v" id="subShadowBlurOut">6px</output></div>
-            <input type="range" id="subShadowBlur" min="0" max="20" step="1" value="6" />
-          </div>
-          <label class="switch"><input type="checkbox" id="subPlate" /> 자막 뒤에 반투명 판 깔기</label>
-          <div class="grid2" style="margin-top:10px">
-            <div class="field">
-              <label for="cropMode">화면 채우기</label>
-              <select id="cropMode">
-                <option value="cover">9:16 센터 크롭</option>
-                <option value="contain">전체 보이기</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="resSelect">해상도</label>
-              <select id="resSelect">
-                <option value="1080">1080×1920</option>
-                <option value="720">720×1280</option>
-              </select>
-            </div>
-          </div>
-          <label class="switch" style="margin-top:10px"><input type="checkbox" id="safeToggle" checked /> 안전영역 가이드 보이기 (정지 중)</label>
+            <label class="switch"><input type="checkbox" id="subPlate" /> 자막 뒤에 반투명 판 깔기</label>
+          </details>
         </section>
       </div>
 
       <!-- ⑤ 내보내기 -->
       <div class="pane" id="pane-export" role="tabpanel" aria-labelledby="tab-export" hidden>
         <section>
-          <h3><span class="num">5</span> 내보내기 <span class="opt" id="exportRes">1080×1920 · 30fps</span></h3>
+          <h3>내보내기 <span class="opt" id="exportRes">1080×1920 · 30fps</span></h3>
           <div class="stats" id="exportStats"></div>
-          <div class="row wrap" style="margin-top:12px">
-            <button class="btn accent" id="btnExportMp4" type="button">🎬 MP4 내보내기</button>
-            <button class="btn" id="btnExportSrt" type="button">💬 SRT 자막</button>
-            <button class="btn" id="btnExportWav" type="button">🎧 오디오 WAV</button>
+          <button class="btn accent wide big" id="btnExportMp4" type="button">🎬 MP4 내보내기</button>
+          <div class="row wrap" style="margin-top:8px">
+            <button class="btn sm" id="btnExportSrt" type="button">💬 SRT 자막</button>
+            <button class="btn sm" id="btnExportWav" type="button">🎧 오디오 WAV</button>
           </div>
           <p class="hint" id="audioWarn" hidden style="color:var(--warn)"></p>
-          <div class="row wrap" style="margin-top:7px">
-            <button class="btn ghost sm" id="btnRecord" type="button">실시간 녹화로 저장 (폴백)</button>
-            <button class="btn ghost sm" id="btnCancelExport" type="button" hidden>취소</button>
-          </div>
           <div class="progress" id="progressWrap" hidden><i id="progressBar"></i></div>
+          <button class="btn ghost sm" id="btnCancelExport" type="button" hidden style="margin-top:8px">취소</button>
           <ul class="export-log" id="exportLog"></ul>
           <div id="resultBox"></div>
-          <p class="hint">MP4는 WebCodecs(H.264)로 프레임을 직접 뽑아 만들어요. 20초 릴스 기준 1~2분쯤 걸리고, 지원이 안 되는 브라우저에서는 <b>실시간 녹화</b>로 저장돼요. 자막은 캡컷·프리미어에 넣는 <b>SRT</b>, 나레이션·BGM만 따로 받는 <b>WAV</b>도 있어요.</p>
-        </section>
-        <section>
-          <h3>브라우저 지원</h3>
-          <div class="stats" id="capStats"></div>
-          <p class="hint">내보내기가 안 되면 Chrome·Edge 최신 버전에서 열어 주세요. Safari는 WebCodecs 지원이 달라 실시간 녹화로 떨어질 수 있어요.</p>
+          <details class="more">
+            <summary>내보내기 세부 설정</summary>
+            <div class="grid2">
+              <div class="field" style="margin-top:0">
+                <label for="cropMode">화면 채우기</label>
+                <select id="cropMode">
+                  <option value="cover">9:16 센터 크롭</option>
+                  <option value="contain">전체 보이기</option>
+                </select>
+              </div>
+              <div class="field" style="margin-top:0">
+                <label for="resSelect">해상도</label>
+                <select id="resSelect">
+                  <option value="1080">1080×1920</option>
+                  <option value="720">720×1280</option>
+                </select>
+              </div>
+            </div>
+            <label class="switch" style="margin-top:10px"><input type="checkbox" id="safeToggle" checked /> 안전영역 가이드 보이기 (정지 중)</label>
+            <div class="row wrap" style="margin-top:10px">
+              <button class="btn ghost sm" id="btnRecord" type="button">실시간 녹화로 저장 (폴백)</button>
+            </div>
+            <p class="hint">MP4는 WebCodecs(H.264)로 프레임을 직접 뽑아 만들어요. 20초 릴스 기준 1~2분쯤 걸리고, 지원이 안 되는 브라우저에서는 <b>실시간 녹화</b>로 저장돼요.</p>
+            <h4 class="more-h">브라우저 지원</h4>
+            <div class="stats" id="capStats"></div>
+          </details>
         </section>
       </div>
     </div>
@@ -910,48 +887,45 @@
 <dialog id="helpDialog">
   <div class="modal-head"><h2>사용법</h2><button class="btn ghost sm" id="btnHelpClose" type="button">닫기</button></div>
   <div class="modal-body">
-    <h3>✨ AI 자동 편집 (원클릭)</h3>
+    <h3>✨ 한 번에 끝내는 순서</h3>
     <ol>
-      <li>① 클립에 <b>5분 통영상</b>을 올리고, ② 대본을 붙여넣어 <b>자막으로 나누기</b>, ③ 오디오에 <b>나레이션</b>을 올려요. (나레이션이 없으면 2.6초/컷 기본 템포로 잡아요)</li>
-      <li>맨 위 <b>✨ AI 자동 편집하기</b>를 누르면 영상 프레임을 훑어 대본 순서에 맞는 구간을 골라 컷으로 붙여요. (Gemini 키가 있으면 AI가 장면을 직접 보고, 없으면 장면 전환이 큰 곳으로 자동 배치)</li>
-      <li>첫 줄은 오프닝 타이틀로 올라가고, 나머지 자막은 컷 길이에 맞춰져요. 마음에 안 드는 컷만 ①에서 미세조정하면 돼요.</li>
+      <li><b>① 영상</b> — 5분 통영상 하나를 올려요. (여러 개도 한 번에)</li>
+      <li><b>② 대본</b> — 대본을 붙여넣고 <b>자막으로 나누기</b>. 엔터로 나눈 줄이 그대로 1줄 = 1자막이 돼요.</li>
+      <li><b>③ 오디오</b> — 캡컷 TTS 파일(또는 TTS 넣은 mp4)을 올리거나, <b>AI 음성 만들기</b>로 대본을 바로 읽혀요.</li>
+      <li>맨 위 <b>✨ AI 자동 편집하기</b>를 누르면 영상 프레임을 훑어 대본 순서에 맞는 구간을 골라 컷으로 붙이고, 자막·효과음까지 얹어요.</li>
+      <li><b>⑤ 내보내기</b> — <b>MP4 내보내기</b>로 1080×1920 릴스를 받아요.</li>
     </ol>
-    <h3>1. 클립 — 통영상에서 컷 따기</h3>
-    <ol>
-      <li><b>① 클립</b> 위쪽 <b>통영상에서 컷 따기</b>에 5분짜리 원테이크 영상을 하나 올려요. (아래 클립 칸에 올린 영상도 소스로 바로 골라 쓸 수 있어요)</li>
-      <li>1x·2x·4x로 훑으면서 <span class="kbd">-5초</span> <span class="kbd">-0.5초</span> <span class="kbd">+0.5초</span> <span class="kbd">+5초</span>로 위치를 맞춰요.</li>
-      <li>시작 지점에서 <b>I</b>(시작점), 끝 지점에서 <b>O</b>(끝점), 그리고 <b>A</b> 또는 <b>Enter</b>를 누르면 타임라인에 컷이 추가돼요. 같은 영상에서 몇 개든 계속 따서 이어 붙일 수 있어요.</li>
-      <li>빠르게 모을 땐 <b>지금부터 2.5초 담기</b> / <b>3초 담기</b>를 연타해요. 소스가 계속 재생되면서 다음 구간으로 넘어가요.</li>
-      <li>아래 클립 카드에서 순서(↑↓·드래그), 시작/끝 미세 조정, 배속(1.0~1.5x), 복제(⧉)·삭제(✕). 카드 썸네일을 누르면 그 구간이 소스 뷰어에 다시 열려요.</li>
-    </ol>
-    <h3>2. 대본 → 자막</h3>
-    <ol>
-      <li>대본 스튜디오에서 만든 대본을 그대로 붙여넣고 <b>자막으로 나누기</b>.</li>
-      <li><code>[0~3초 / ...]</code> 타임코드는 자동으로 지워지고, 문장별로 전체 길이에 맞게 배분돼요.</li>
+    <h3>① 영상 · 컷 목록</h3>
+    <ul>
+      <li>AI가 고른 컷이 카드로 쌓여요. 마음에 안 드는 컷만 시작·끝 초를 고치거나 ✕로 빼고, ↑↓로 순서를 바꿔요.</li>
+      <li>아이폰 기본 .mov(HEVC)가 안 열리면 사진 앱에서 <b>H.264(.mp4)</b>로 내보내 주세요.</li>
+    </ul>
+    <h3>② 대본</h3>
+    <ul>
+      <li><code>[0~3초 / ...]</code> 같은 타임코드·지문은 자동으로 지워지고, 전체 길이에 맞춰 배분돼요.</li>
       <li>첫 줄 후킹은 <b>첫 줄 → 오프닝 타이틀</b>로 바로 올릴 수 있어요.</li>
-    </ol>
-    <h3>3. 오디오</h3>
-    <ol>
-      <li>나레이션은 캡컷 TTS에서 뽑은 <b>mp3·m4a·wav</b>를 올리면 파형을 분석해 <b>숨 고르기·빈 구간을 자동으로 잘라내요</b>. TTS를 넣은 <b>mp4·mov 영상</b>을 올려도 소리만 뽑아서 똑같이 처리해요.</li>
-      <li>무음 기준(dB)과 최소 무음 길이를 조절하고 <b>다시 분석</b>.</li>
-      <li>BGM을 올리고 볼륨을 나레이션보다 낮게 잡아요.</li>
-      <li><b>효과음(SFX)</b>은 자동으로 깔려요 — 오프닝 톡!, 컷 전환 휙~, 소구점 반짝✨, 할인·마무리 딩동. 볼륨과 4가지 미리듣기, <b>효과음 자동 배치</b> 버튼이 있어요.</li>
-    </ol>
-    <h3>4. 내보내기</h3>
-    <ol>
-      <li><b>MP4 내보내기</b> → 1080×1920 · 30fps H.264 파일이 다운로드돼요.</li>
-      <li>자막만 필요하면 <b>SRT 자막</b>을 받아 캡컷에 넣어요.</li>
-      <li>인스타 앱 업로드 시 자막이 UI에 가리지 않도록 아래쪽은 비워 뒀어요.</li>
-    </ol>
+    </ul>
+    <h3>③ 오디오</h3>
+    <ul>
+      <li>나레이션은 mp3·m4a·wav, 또는 TTS를 넣은 mp4·mov(소리만 뽑아요)를 올리면 <b>숨 고르기·빈 구간을 자동으로 잘라내요</b>.</li>
+      <li>무음 기준(dB)·최소 무음 같은 세부 값은 <b>무음 컷 세부 조절</b>을 펼쳐서 만져요.</li>
+      <li>효과음(톡!·휙~·반짝✨·딩동)은 자동으로 깔리고, 볼륨·미리듣기는 <b>효과음 세부 조절</b>에 있어요.</li>
+      <li>BGM은 <b>BGM 넣기</b>를 펼쳐 올리고 볼륨을 나레이션보다 낮게 잡아요.</li>
+    </ul>
+    <h3>④ 스타일</h3>
+    <ul>
+      <li>오프닝 타이틀 문구·폰트·색과 본편 자막 폰트·색만 보이게 두고, 자간·그림자·위치·배경판은 <b>세부 조절</b>에 접어 뒀어요.</li>
+      <li>해상도·화면 채우기·안전영역은 <b>⑤ 내보내기 → 내보내기 세부 설정</b>에 있어요.</li>
+    </ul>
     <h3>단축키</h3>
     <ul>
-      <li><span class="kbd">I</span> 소스 시작점 · <span class="kbd">O</span> 소스 끝점 · <span class="kbd">A</span> / <span class="kbd">Enter</span> 컷 추가</li>
       <li><span class="kbd">Space</span> 재생 / 일시정지</li>
       <li><span class="kbd">←</span> <span class="kbd">→</span> 0.1초 이동 (<span class="kbd">Shift</span>로 1초)</li>
       <li><span class="kbd">Home</span> 처음으로</li>
     </ul>
     <h3>참고</h3>
     <p>영상과 오디오는 브라우저 안에서만 처리되고 어디에도 올라가지 않아요. 새로고침하면 편집 중인 내용은 사라져요.</p>
+  </div>
   </div>
 </dialog>
 
@@ -1073,7 +1047,6 @@ const S = {
   sfx: { on: true, auto: true, gain: 0.55, events: [] },
   settings: { w: 1080, h: 1920, fps: 30, fit: true, crop: 'cover', showSafe: true },
   play: { t: 0, playing: false },
-  srcViewer: { src: null, speed: 1, inT: null, outT: null, playing: false, muted: true, raf: 0, rangeEnd: null },
   narrExtract: { busy: false, cancel: false },
   audio: { ctx: null, gain: null, master: null, dirty: false, building: null },
   caps: { webcodecs: false, h264: false, avc: '', audioAac: false, audioOpus: false, recorder: false, recorderMime: '' },
@@ -1283,18 +1256,15 @@ async function addClipFiles(fileList) {
     return false;
   });
   if (!files.length) { toast('영상 파일(mp4·mov·webm)을 골라 주세요'); return; }
-  let firstSrc = null;
   for (const f of files) {
     try {
       const src = await openSource(f);
       addClipFromSource(src, 0, src.duration);
-      if (!firstSrc) firstSrc = src;
     } catch (err) {
       ERRORS.push({ type: 'clip', message: String(err.message || err) });
       toast(err.message || '클립을 열지 못했어요', 3200);
     }
   }
-  if (firstSrc && !S.srcViewer.src) loadSourceIntoViewer(firstSrc);
   afterClipsChanged();
 }
 
@@ -1334,7 +1304,6 @@ async function openSource(file) {
     try { el.currentTime = 0; } catch (e) {}
     await frameReady(el, 220);
     SRC.map.set(key, src);
-    renderSourcePicker();
   } catch (err) {
     try { el.remove(); URL.revokeObjectURL(url); } catch (e) {}
     throw err;
@@ -1357,26 +1326,21 @@ function addClipFromSource(src, start, end, opts = {}) {
 }
 
 function sourceUsedBy(src) {
-  return S.clips.some((c) => c.src === src) || (S.srcViewer && S.srcViewer.src === src);
+  return S.clips.some((c) => c.src === src);
 }
 
 function releaseUnusedSources() {
-  let changed = false;
   for (const [k, src] of Array.from(SRC.map)) {
     if (sourceUsedBy(src)) continue;
     try { src.el.pause(); src.el.remove(); } catch (e) {}
     try { URL.revokeObjectURL(src.url); } catch (e) {}
     SRC.map.delete(k);
-    changed = true;
   }
-  if (changed) renderSourcePicker();
 }
 
 function afterClipsChanged() {
   renderClips();
   renderTimeline();
-  renderSourceMarks();
-  updateSourceUI();
   fitGuards();
   scheduleMaster();
   if (S.subsAuto) redistributeSubs(false);
@@ -1385,347 +1349,9 @@ function afterClipsChanged() {
   scheduleDraw();
 }
 
-/* ---------- 소스 뷰어 (5분 통영상에서 여러 구간 따기) ---------- */
-const srcVideoEl = $('#srcVideo');
-
-function renderSourcePicker() {
-  const sel = $('#srcPick');
-  if (!sel) return;
-  const list = sourceList();
-  const cur = S.srcViewer.src ? S.srcViewer.src.key : '';
-  sel.innerHTML =
-    '<option value="">소스 영상 선택…</option>' +
-    list.map((s) => `<option value="${escapeHtml(s.key)}"${s.key === cur ? ' selected' : ''}>${escapeHtml(s.name)} · ${fmtClock(s.duration)}</option>`).join('') +
-    '<option value="__upload">＋ 새 영상 올리기</option>';
-  if (!list.length) sel.selectedIndex = 0;
-}
-
-function loadSourceIntoViewer(src) {
-  if (!src) return;
-  S.srcViewer.src = src;
-  S.srcViewer.inT = null;
-  S.srcViewer.outT = null;
-  S.srcViewer.rangeEnd = null;
-  S.srcViewer.speed = 1;
-  srcVideoEl.pause();
-  srcVideoEl.src = src.url;
-  srcVideoEl.poster = src.thumb || '';
-  srcVideoEl.playbackRate = 1;
-  srcVideoEl.muted = S.srcViewer.muted;
-  try { srcVideoEl.currentTime = 0; } catch (e) {}
-  $('#srcVideoEmpty').hidden = true;
-  $('#srcScrub').max = String(Math.max(0.01, src.duration));
-  $('#srcDur').textContent = '/ ' + fmtClock(src.duration);
-  syncSrcSpeed();
-  renderSourcePicker();
-  renderSourceMarks();
-  updateSourceUI();
-}
-
-function clearSourceViewer() {
-  S.srcViewer.src = null;
-  S.srcViewer.inT = null;
-  S.srcViewer.outT = null;
-  srcVideoEl.pause();
-  srcVideoEl.removeAttribute('src');
-  srcVideoEl.removeAttribute('poster');
-  try { srcVideoEl.load(); } catch (e) {}
-  $('#srcVideoEmpty').hidden = false;
-  $('#srcDur').textContent = '/ 0:00.0';
-  $('#srcScrub').max = '1';
-  $('#srcScrub').value = '0';
-  renderSourceMarks();
-  updateSourceUI();
-}
-
-function syncSrcSpeed() {
-  $$('#srcSpeed button').forEach((b) => b.setAttribute('aria-pressed', String(parseFloat(b.dataset.r) === S.srcViewer.speed)));
-  try { srcVideoEl.playbackRate = S.srcViewer.speed; } catch (e) {}
-}
-
-function updateSourceUI() {
-  const src = S.srcViewer.src;
-  const t = src ? (srcVideoEl.currentTime || 0) : 0;
-  $('#srcTime').textContent = fmtClock(t);
-  const sc = $('#srcScrub');
-  if (src) {
-    sc.max = String(Math.max(0.01, src.duration));
-    sc.value = String(clamp(t, 0, src.duration));
-  }
-  const inT = S.srcViewer.inT;
-  const outT = S.srcViewer.outT;
-  const sel = $('#srcSel');
-  if (inT != null && outT != null && outT > inT) {
-    sel.textContent = `선택 ${fmtClock(inT)} ~ ${fmtClock(outT)} · ${(outT - inT).toFixed(1)}초`;
-    sel.style.color = 'var(--accent-ink)';
-  } else if (inT != null) {
-    sel.textContent = `시작 ${fmtClock(inT)} · 끝점을 찍어 주세요`;
-    sel.style.color = 'var(--warn)';
-  } else {
-    sel.textContent = src ? '구간 없음 (I → O)' : '구간 없음';
-    sel.style.color = 'var(--ink-3)';
-  }
-  const iIn = $('#srcIn');
-  const iOut = $('#srcOut');
-  if (document.activeElement !== iIn) iIn.value = inT != null ? String(inT) : '';
-  if (document.activeElement !== iOut) iOut.value = outT != null ? String(outT) : '';
-  $('#srcAddCut').disabled = !src;
-}
-
-function renderSourceMarks() {
-  const src = S.srcViewer.src;
-  const dur = src ? src.duration : 0;
-  const inT = S.srcViewer.inT;
-  const outT = S.srcViewer.outT;
-  const fill = $('#srcFill');
-  const mi = $('#srcInMark');
-  const mo = $('#srcOutMark');
-  if (!fill) return;
-  if (dur > 0 && inT != null && outT != null && outT > inT) {
-    fill.hidden = false;
-    fill.style.left = (inT / dur) * 100 + '%';
-    fill.style.width = ((outT - inT) / dur) * 100 + '%';
-  } else fill.hidden = true;
-  if (dur > 0 && inT != null) { mi.hidden = false; mi.style.left = (inT / dur) * 100 + '%'; } else mi.hidden = true;
-  if (dur > 0 && outT != null) { mo.hidden = false; mo.style.left = (outT / dur) * 100 + '%'; } else mo.hidden = true;
-  const cm = $('#srcCutmarks');
-  if (!cm) return;
-  cm.innerHTML = '';
-  if (!src || !dur) return;
-  for (const c of S.clips) {
-    if (c.src !== src) continue;
-    for (const [tm, op] of [[c.trimStart, '.9'], [c.trimEnd, '.45']]) {
-      const mark = document.createElement('i');
-      mark.style.left = (tm / dur) * 100 + '%';
-      mark.style.opacity = op;
-      mark.title = `이미 담은 컷 ${fmtClock(c.trimStart)}~${fmtClock(c.trimEnd)}`;
-      cm.appendChild(mark);
-    }
-  }
-}
-
-function srcSeek(t) {
-  if (!S.srcViewer.src) return;
-  const d = S.srcViewer.src.duration;
-  S.srcViewer.rangeEnd = null;
-  try { srcVideoEl.currentTime = clamp(t, 0, Math.max(0, d - 0.02)); } catch (e) {}
-  updateSourceUI();
-}
-
-function srcTogglePlay() {
-  if (!S.srcViewer.src) { toast('소스 영상을 먼저 골라 주세요'); return; }
-  if (srcVideoEl.paused) {
-    S.srcViewer.rangeEnd = null;
-    srcVideoEl.playbackRate = S.srcViewer.speed;
-    srcVideoEl.play().catch(() => toast('이 영상은 재생할 수 없어요', 2600));
-  } else srcVideoEl.pause();
-}
-
-function srcMarkIn() {
-  if (!S.srcViewer.src) { toast('소스 영상을 먼저 골라 주세요'); return; }
-  const t = round2(srcVideoEl.currentTime);
-  S.srcViewer.inT = t;
-  if (S.srcViewer.outT != null && S.srcViewer.outT <= t + 0.05) S.srcViewer.outT = null;
-  renderSourceMarks();
-  updateSourceUI();
-  toast('시작점 ' + fmtClock(t), 1400);
-}
-
-function srcMarkOut() {
-  if (!S.srcViewer.src) { toast('소스 영상을 먼저 골라 주세요'); return; }
-  const t = round2(srcVideoEl.currentTime);
-  if (S.srcViewer.inT == null || S.srcViewer.inT >= t - 0.05) {
-    S.srcViewer.inT = round2(Math.max(0, t - 2.5));
-    toast('끝점 ' + fmtClock(t) + ' · 시작점을 ' + fmtClock(S.srcViewer.inT) + '로 잡았어요 (2.5초)', 2200);
-  } else {
-    toast('끝점 ' + fmtClock(t) + ' · ' + (t - S.srcViewer.inT).toFixed(1) + '초', 1400);
-  }
-  S.srcViewer.outT = t;
-  renderSourceMarks();
-  updateSourceUI();
-}
-
-function markClipFresh(id) {
-  requestAnimationFrame(() => {
-    const li = $(`#clipList .clip[data-id="${id}"]`);
-    if (!li) return;
-    li.classList.add('fresh');
-    try { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
-    setTimeout(() => li.classList.remove('fresh'), 1500);
-  });
-}
-
-function srcAddCut(lenOverride) {
-  const src = S.srcViewer.src;
-  if (!src) { toast('소스 영상을 먼저 골라 주세요'); return; }
-  let a;
-  let b;
-  if (lenOverride) {
-    a = round2(srcVideoEl.currentTime);
-    b = round2(Math.min(src.duration, a + lenOverride));
-  } else {
-    a = S.srcViewer.inT;
-    b = S.srcViewer.outT;
-    if (a == null || b == null || b <= a) { toast('I로 시작점, O로 끝점을 먼저 찍어 주세요', 2400); return; }
-  }
-  const clip = addClipFromSource(src, a, b);
-  if (!clip) return;
-  const nth = S.clips.length;
-  const wasPlaying = !srcVideoEl.paused;
-  S.srcViewer.inT = round2(clip.trimEnd);
-  S.srcViewer.outT = null;
-  try { srcVideoEl.currentTime = Math.min(Math.max(0, src.duration - 0.03), clip.trimEnd); } catch (e) {}
-  if (wasPlaying) srcVideoEl.play().catch(() => {});
-  afterClipsChanged();
-  markClipFresh(clip.id);
-  toast(`${nth}번째 컷 담음 · ${fmtClock(clip.trimStart)}~${fmtClock(clip.trimEnd)} (${(clip.trimEnd - clip.trimStart).toFixed(1)}초)`, 2600);
-}
-
-function srcPlayRange() {
-  if (!S.srcViewer.src) { toast('소스 영상을 먼저 골라 주세요'); return; }
-  const a = S.srcViewer.inT;
-  const b = S.srcViewer.outT;
-  if (a == null || b == null || b <= a) { toast('I로 시작점, O로 끝점을 먼저 찍어 주세요', 2400); return; }
-  S.srcViewer.rangeEnd = b;
-  try { srcVideoEl.currentTime = a; } catch (e) {}
-  srcVideoEl.playbackRate = S.srcViewer.speed;
-  srcVideoEl.play().catch(() => {});
-}
-
-function srcLoop() {
-  if (srcVideoEl.paused) return;
-  updateSourceUI();
-  S.srcViewer.raf = requestAnimationFrame(srcLoop);
-}
-
-function bindSourceViewer() {
-  const pick = $('#srcPick');
-  if (!pick) return;
-  renderSourcePicker();
-  pick.addEventListener('change', (e) => {
-    const v = e.target.value;
-    if (v === '__upload') {
-      e.target.value = S.srcViewer.src ? S.srcViewer.src.key : '';
-      $('#srcInput').click();
-      return;
-    }
-    const src = sourceList().find((s) => s.key === v);
-    if (src) loadSourceIntoViewer(src);
-    else clearSourceViewer();
-  });
-  $('#btnSrcUpload').addEventListener('click', () => $('#srcInput').click());
-  $('#srcInput').addEventListener('change', async (e) => {
-    const f = e.target.files && e.target.files[0];
-    e.target.value = '';
-    if (!f) return;
-    try {
-      const src = await openSource(f);
-      loadSourceIntoViewer(src);
-      toast('소스 ' + fmtClock(src.duration) + ' 불러왔어요 · I/O로 구간을 찍어 보세요', 3000);
-    } catch (err) {
-      toast(err.message || '영상을 열지 못했어요', 3200);
-      ERRORS.push({ type: 'source', message: String(err.message || err) });
-    }
-  });
-  const wrap = $('#srcVideoWrap');
-  ['dragenter', 'dragover'].forEach((ev) => wrap.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); wrap.classList.add('over'); }));
-  ['dragleave', 'drop'].forEach((ev) => wrap.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); wrap.classList.remove('over'); }));
-  wrap.addEventListener('drop', async (e) => {
-    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (!f) return;
-    try {
-      const src = await openSource(f);
-      loadSourceIntoViewer(src);
-      toast('소스 ' + fmtClock(src.duration) + ' 불러왔어요', 2600);
-    } catch (err) { toast(err.message || '영상을 열지 못했어요', 3200); }
-  });
-  srcVideoEl.addEventListener('click', () => srcTogglePlay());
-  srcVideoEl.addEventListener('play', () => {
-    S.srcViewer.playing = true;
-    $('#srcPlay').textContent = '❚❚';
-    cancelAnimationFrame(S.srcViewer.raf);
-    srcLoop();
-  });
-  srcVideoEl.addEventListener('pause', () => {
-    S.srcViewer.playing = false;
-    $('#srcPlay').textContent = '▶';
-    cancelAnimationFrame(S.srcViewer.raf);
-    updateSourceUI();
-  });
-  srcVideoEl.addEventListener('ended', () => updateSourceUI());
-  srcVideoEl.addEventListener('timeupdate', () => {
-    if (S.srcViewer.rangeEnd != null && srcVideoEl.currentTime >= S.srcViewer.rangeEnd - 0.02) {
-      S.srcViewer.rangeEnd = null;
-      srcVideoEl.pause();
-    }
-    if (srcVideoEl.paused) updateSourceUI();
-  });
-  srcVideoEl.addEventListener('error', () => { toast('이 영상을 브라우저에서 열 수 없어요 (HEVC면 H.264 mp4로)', 3200); });
-  srcVideoEl.addEventListener('loadedmetadata', () => {
-    const s = S.srcViewer.src;
-    if (s) { $('#srcDur').textContent = '/ ' + fmtClock(srcVideoEl.duration || s.duration); }
-    updateSourceUI();
-  });
-  $('#srcPlay').addEventListener('click', srcTogglePlay);
-  $('#srcSound').addEventListener('click', () => {
-    S.srcViewer.muted = !S.srcViewer.muted;
-    srcVideoEl.muted = S.srcViewer.muted;
-    $('#srcSound').textContent = S.srcViewer.muted ? '🔇' : '🔊';
-    $('#srcSound').setAttribute('aria-pressed', String(!S.srcViewer.muted));
-  });
-  $$('#srcSpeed button').forEach((b) => b.addEventListener('click', () => {
-    S.srcViewer.speed = parseFloat(b.dataset.r) || 1;
-    syncSrcSpeed();
-    if (!srcVideoEl.paused) srcVideoEl.play().catch(() => {});
-  }));
-  $$('.src-jumps button').forEach((b) => b.addEventListener('click', () => {
-    if (!S.srcViewer.src) { toast('소스 영상을 먼저 골라 주세요'); return; }
-    srcSeek((srcVideoEl.currentTime || 0) + parseFloat(b.dataset.j));
-  }));
-  const scrub = $('#srcScrub');
-  scrub.addEventListener('input', () => srcSeek(parseFloat(scrub.value)));
-  scrub.addEventListener('pointerdown', () => srcVideoEl.pause());
-  $('#srcMarkIn').addEventListener('click', srcMarkIn);
-  $('#srcMarkOut').addEventListener('click', srcMarkOut);
-  $('#srcAddCut').addEventListener('click', () => srcAddCut());
-  $('#srcQuick25').addEventListener('click', () => srcAddCut(2.5));
-  $('#srcQuick30').addEventListener('click', () => srcAddCut(3));
-  $('#srcPlaySel').addEventListener('click', srcPlayRange);
-  const iIn = $('#srcIn');
-  const iOut = $('#srcOut');
-  iIn.addEventListener('change', () => {
-    if (!S.srcViewer.src) return;
-    const v = parseFloat(iIn.value);
-    S.srcViewer.inT = isFinite(v) ? round2(clamp(v, 0, S.srcViewer.src.duration)) : null;
-    renderSourceMarks();
-    updateSourceUI();
-  });
-  iOut.addEventListener('change', () => {
-    if (!S.srcViewer.src) return;
-    const v = parseFloat(iOut.value);
-    S.srcViewer.outT = isFinite(v) ? round2(clamp(v, 0, S.srcViewer.src.duration)) : null;
-    renderSourceMarks();
-    updateSourceUI();
-  });
-  // I / O / A(Enter) 단축키 — 입력 중이거나 다른 탭이면 무시
-  document.addEventListener('keydown', (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    const tgt = e.target;
-    const typing = tgt && tgt.closest && tgt.closest('input,textarea,select,[contenteditable="true"]');
-    if (typing) return;
-    // 버튼에 포커스가 있어도 I/O/A는 동작해야 한다 (Enter만 버튼 클릭과 겹치니 통과)
-    const onControl = tgt && tgt.closest && tgt.closest('button,a');
-    const pane = $('#pane-clips');
-    if (!pane || pane.hidden) return;
-    if (!S.srcViewer.src) return;
-    const k = String(e.key || '').toLowerCase();
-    if (k === 'i') { e.preventDefault(); srcMarkIn(); }
-    else if (k === 'o') { e.preventDefault(); srcMarkOut(); }
-    else if (k === 'a') { e.preventDefault(); srcAddCut(); }
-    else if (e.key === 'Enter' && !onControl) { e.preventDefault(); srcAddCut(); }
-  });
-  updateSourceUI();
-}
+/* ---------- 소스 파일 레지스트리 보조 ----------
+   소스 뷰어(수동 컷따기)는 UI에서 빠졌지만, SRC의 <video>는 AI 자동 편집이
+   장면 프레임을 뽑는 데 그대로 쓰인다. (openSource / addClipFromSource 참고) */
 
 /* ---------- canvas drawing ---------- */
 const stageCv = $('#stageCanvas');
@@ -2826,7 +2452,7 @@ async function generateTts() {
   const tone = ($('#ttsTone').value || '').trim();
   const voice = ($('#ttsVoice').value || 'Kore').trim();
 
-  if (!key) { fail('Gemini API 키가 없어요. 위 키 칸에 넣고 [키 저장]을 눌러 주세요.'); $('#ttsKey').focus(); return; }
+  if (!key) { fail('Gemini API 키가 없어요. 아래 [톤 · Gemini 키 설정]을 펼쳐 키를 넣고 [키 저장]을 눌러 주세요.'); revealTtsKey(); return; }
   if (!text) { fail('읽을 대본이 비어 있어요. ② 대본·자막을 나누거나 아래 칸에 직접 붙여넣어 주세요.'); $('#ttsText').focus(); return; }
 
   const prompt = tone ? (tone.replace(/[:：]\s*$/, '') + ':\n' + text) : text;
@@ -2909,7 +2535,7 @@ function bindTTS() {
   voiceEl.addEventListener('change', () => lsSet(TTS.voiceKey, voiceEl.value));
   $('#btnTtsKeySave').addEventListener('click', () => {
     const v = keyEl.value.trim();
-    if (!v) { toast('키를 먼저 붙여넣어 주세요'); keyEl.focus(); return; }
+    if (!v) { toast('키를 먼저 붙여넣어 주세요'); revealTtsKey(); return; }
     lsSet(TTS.keyName, v);
     refreshTtsKeyNote();
     refreshAiKeyNote();
@@ -3181,13 +2807,21 @@ function refreshAiKeyNote() {
   if (input && saved && !input.value) input.value = saved;
 }
 
+/* 접힌 <details> 안의 Gemini 키 칸을 펼쳐서 포커스 */
+function revealTtsKey() {
+  const el = $('#ttsKey');
+  if (!el) return;
+  const box = el.closest('details');
+  if (box) box.open = true;
+  try { el.focus({ preventScroll: false }); } catch (e) {}
+}
+
 function switchPane(name) {
   const tab = document.querySelector(`.tab[data-pane="${name}"]`);
   if (tab) tab.click();
 }
 
 function aiPickSource() {
-  if (S.srcViewer.src) return S.srcViewer.src;
   const list = sourceList();
   if (list.length) return list[0];
   if (S.clips.length && S.clips[0].src) return S.clips[0].src;
@@ -3544,7 +3178,7 @@ async function runAutoEdit() {
 
   const src = aiPickSource();
   if (!src) {
-    aiSetStatus('① 클립에 영상을 먼저 올려 주세요. 5분 통영상 하나면 충분해요.', 'warn');
+    aiSetStatus('① 영상 탭에서 영상을 먼저 올려 주세요. 5분 통영상 하나면 충분해요.', 'warn');
     toast('소스 영상을 먼저 올려 주세요', 2600);
     switchPane('clips');
     return;
@@ -3633,10 +3267,10 @@ async function runAutoEdit() {
 
     const L = layout();
     const sfxN = S.sfx.on ? S.sfx.events.length : 0;
-    let msg = `완료 · ${engine} · ${L.total.toFixed(1)}초 · 컷 ${result.clips}개 · 자막 ${result.subs}줄 · 효과음 ${sfxN}개`;
-    if (!hasNarr) msg += ' · 나레이션 없이 기본 템포(2.6초/컷)';
+    let msg = `완료 · 컷 ${result.clips}개 · 자막 ${result.subs}줄 · 효과음 ${sfxN}개 · ${L.total.toFixed(1)}초`;
+    if (!hasNarr) msg += ' (나레이션 없이 2.6초/컷)';
     let kind = 'ok';
-    if (!key) { msg += ' · ' + AI.lastError + ' — 키를 넣으면 장면 맞춤이 좋아져요'; kind = 'warn'; }
+    if (!key) { msg += ' · Gemini 키를 넣으면 장면 맞춤이 더 좋아져요'; kind = 'warn'; }
     else if (engine.indexOf('스마트') === 0) { msg += ' · ' + AI.lastError; kind = 'warn'; }
     aiSetStatus(msg, kind);
     AI.lastEngine = engine;
@@ -3662,7 +3296,13 @@ function bindAi() {
     keyEl.value = lsGet(AI.keyName, '');
     $('#btnAiKeySave').addEventListener('click', () => {
       const v = keyEl.value.trim();
-      if (!v) { toast('Gemini 키를 먼저 붙여넣어 주세요'); keyEl.focus(); return; }
+      if (!v) {
+        toast('Gemini 키를 먼저 붙여넣어 주세요');
+        const box = keyEl.closest('details');
+        if (box) box.open = true;
+        keyEl.focus();
+        return;
+      }
       lsSet(AI.keyName, v);
       const ttsKey = $('#ttsKey');
       if (ttsKey) ttsKey.value = v;
@@ -3672,6 +3312,14 @@ function bindAi() {
     });
   }
   refreshAiKeyNote();
+
+  const steps = $('#aiSteps');
+  if (steps) {
+    steps.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-pane]');
+      if (b) switchPane(b.dataset.pane);
+    });
+  }
 
   /* SFX 패널 */
   const tgl = $('#sfxToggle');
@@ -3750,10 +3398,10 @@ function renderClips() {
     li.innerHTML =
       `<div class="clip-thumb${c.src ? ' jumpable' : ''}" ${c.src ? 'title="소스에서 이 구간 다시 보기"' : ''} style="${c.thumb ? `background-image:url('${c.thumb}')` : ''}">${c.thumb ? '' : '🎞'}</div>
       <div class="clip-main">
-        <div class="clip-name">${i + 1}. ${escapeHtml(c.name)}<span class="dur">${c.duration.toFixed(1)}초</span></div>
+        <div class="clip-name">${i + 1}. ${escapeHtml(c.name)}</div>
         <div class="clip-fields">
           <label>시작<input type="number" data-k="trimStart" min="0" max="${(c.duration - 0.1).toFixed(2)}" step="0.05" value="${c.trimStart}" /></label>
-          <label>끝(원본)<input type="number" data-k="trimEnd" min="0.1" max="${c.duration.toFixed(2)}" step="0.05" value="${c.trimEnd}" /></label>
+          <label>끝<input type="number" data-k="trimEnd" min="0.1" max="${c.duration.toFixed(2)}" step="0.05" value="${c.trimEnd}" /></label>
           <label>배속<select data-k="speed">${[1, 1.1, 1.2, 1.3, 1.4, 1.5].map((s) => `<option value="${s}" ${Math.abs(c.speed - s) < 0.001 ? 'selected' : ''}>${s.toFixed(1)}x</option>`).join('')}</select></label>
         </div>
         <div class="clip-meta">${clipMetaInner(c)}</div>
@@ -3798,7 +3446,6 @@ function renderTimeline() {
   const subTrack = $('#subTrack');
   track.innerHTML = '';
   subTrack.innerHTML = '';
-  renderSourceMarks();
   $('#tlEmpty').hidden = S.clips.length > 0 && L.total > 0;
   if (!S.clips.length || L.total <= 0) { updateTransportUI(); return; }
   for (const seg of L.segs) {
@@ -3955,8 +3602,29 @@ function updateAllStats() {
   if (tl) tl.hidden = S.clips.length > 0 && L.total > 0;
   const sc = $('#subCount');
   if (sc) sc.textContent = S.subs.length + '개';
+  const cc = $('#clipCount');
+  if (cc) cc.textContent = S.clips.length ? S.clips.length + '개 · ' + fmtSec(L.total) : '비어 있음';
+  const cd = $('#clipDrop');
+  if (cd) cd.classList.toggle('compact', S.clips.length > 0);
   refreshSfxUI();
   updateTransportUI();
+  updateSteps();
+}
+
+/* AI 카드의 진행 순서 칩 — 영상/대본/나레이션 준비 상태를 한눈에 */
+function updateSteps() {
+  const wrap = $('#aiSteps');
+  if (!wrap) return;
+  const ready = {
+    clips: S.clips.length > 0,
+    script: S.subs.length > 0 || !!String(($('#scriptInput') || {}).value || '').trim(),
+    audio: !!(S.narration.buffer && S.narration.duration > 0.3),
+  };
+  wrap.querySelectorAll('button[data-step]').forEach((b) => {
+    const on = !!ready[b.dataset.step];
+    b.classList.toggle('done', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
 }
 
 function renderCapStats() {
@@ -4367,16 +4035,12 @@ function bindClips() {
     const thumb = e.target.closest('.clip-thumb');
     if (thumb) {
       const li = e.target.closest('.clip');
-      const c = S.clips.find((x) => x.id === (li && li.dataset.id));
-      if (c && c.src) {
-        if (S.srcViewer.src !== c.src) loadSourceIntoViewer(c.src);
-        S.srcViewer.inT = c.trimStart;
-        S.srcViewer.outT = c.trimEnd;
-        srcVideoEl.pause();
-        srcSeek(c.trimStart);
-        renderSourceMarks();
-        updateSourceUI();
-        toast('소스 ' + fmtClock(c.trimStart) + '~' + fmtClock(c.trimEnd) + ' 구간을 열었어요', 2200);
+      const id = li && li.dataset.id;
+      const seg = layout().segs.find((s) => s.clip.id === id);
+      if (seg) {
+        pausePlayback();
+        seekTo(seg.start + 0.01);
+        toast('이 컷 구간을 미리보기로 열었어요', 1800);
       }
     }
   });
@@ -4463,7 +4127,7 @@ function bindClips() {
     S.play.t = 0;
     releaseUnusedSources();
     afterClipsChanged();
-    toast('클립을 모두 비웠어요 (소스는 남아 있어요)');
+    toast('클립을 모두 비웠어요 · 영상을 다시 올려 주세요');
   });
   $('#btnFitClips').addEventListener('click', () => {
     if (!S.narration.buffer) { toast('나레이션을 먼저 올려 주세요'); return; }
@@ -4494,7 +4158,6 @@ function bindScript() {
     toast(blocks.length + '개 자막으로 나눴어요');
     const L = layout();
     if (L.total < 0.2) $('#parseReport').innerHTML += ' <span style="color:var(--warn)">클립을 올리면 실제 길이에 맞춰 다시 배분돼요.</span>';
-    setTimeout(() => { const el = $('#btnRedistribute'); if (el) el.focus({ preventScroll: true }); }, 10);
   });
   $('#btnHookToTitle').addEventListener('click', () => {
     let text = '';
@@ -4834,7 +4497,6 @@ function bindExport() {
 async function init() {
   bindTabs();
   bindClips();
-  bindSourceViewer();
   bindScript();
   bindStyle();
   bindAudio();
@@ -4859,8 +4521,8 @@ async function init() {
 
 window.__studio = {
   S, SRC, layout, parseScript, cleanScript, scriptLines, chunkLine, analyzeSilence, buildSRT, buildMaster,
-  seekTo, startPlayback, pausePlayback, addClipFiles, openSource, addClipFromSource, srcAddCut,
-  srcMarkIn, srcMarkOut, loadSourceIntoViewer, decodeAudioFromMedia, extractAudioTrack, loadNarration,
+  seekTo, startPlayback, pausePlayback, addClipFiles, openSource, addClipFromSource,
+  decodeAudioFromMedia, extractAudioTrack, loadNarration,
   reanalyzeNarration, exportMP4, exportSRT, renderChips,
   text: { textWidth, paintSpacedText, spacingSupported },
   ai: { run: runAutoEdit, state: AI, extractFrames: extractAiFrames, localPlan: localScenePlan, apply: applyAiPlan, models: aiDiscoverModels, rank: aiRankModels, normalize: normalizeAiCuts },
