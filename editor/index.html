@@ -587,6 +587,7 @@
           <div class="row wrap" style="margin-top:12px">
             <button class="btn accent" id="btnExportMp4" type="button">🎬 MP4 내보내기</button>
             <button class="btn" id="btnExportSrt" type="button">💬 SRT 자막</button>
+            <button class="btn" id="btnExportWav" type="button">🎧 오디오 WAV</button>
           </div>
           <p class="hint" id="audioWarn" hidden style="color:var(--warn)"></p>
           <div class="row wrap" style="margin-top:7px">
@@ -596,7 +597,7 @@
           <div class="progress" id="progressWrap" hidden><i id="progressBar"></i></div>
           <ul class="export-log" id="exportLog"></ul>
           <div id="resultBox"></div>
-          <p class="hint">MP4는 WebCodecs(H.264)로 프레임을 직접 뽑아 만들어요. 20초 릴스 기준 1~2분쯤 걸리고, 지원이 안 되는 브라우저에서는 <b>실시간 녹화</b>로 저장돼요. 자막은 캡컷·프리미어에 바로 넣는 SRT로도 받을 수 있어요.</p>
+          <p class="hint">MP4는 WebCodecs(H.264)로 프레임을 직접 뽑아 만들어요. 20초 릴스 기준 1~2분쯤 걸리고, 지원이 안 되는 브라우저에서는 <b>실시간 녹화</b>로 저장돼요. 자막은 캡컷·프리미어에 넣는 <b>SRT</b>, 나레이션·BGM만 따로 받는 <b>WAV</b>도 있어요.</p>
         </section>
         <section>
           <h3>브라우저 지원</h3>
@@ -1875,7 +1876,7 @@ async function detectCaps() {
   if (warn) {
     warn.hidden = !(c.h264 && !c.audioAac);
     if (!warn.hidden) {
-      warn.innerHTML = '이 브라우저에는 AAC 인코더가 없어서 MP4 오디오가 <b>Opus</b>로 들어가요. 인스타에 올릴 AAC 파일이 필요하면 <b>실시간 녹화로 저장</b>을 쓰면 MP4·AAC로 나와요.';
+      warn.innerHTML = '이 브라우저에는 AAC 인코더가 없어서 MP4 오디오가 <b>Opus</b>로 들어가요. 인스타 업로드가 막히면 ① <b>오디오 WAV</b>를 같이 받아 캡컷에서 영상+WAV로 다시 내보내거나, ② 인스타 앱에서 음악을 따로 붙이는 방법이 확실해요.';
     }
   }
   const mp4Btn = $('#btnExportMp4');
@@ -1910,7 +1911,7 @@ function setProgress(pct) {
 
 function setExportUI(busy) {
   S.exporting.busy = busy;
-  for (const id of ['#btnExportMp4', '#btnExportSrt', '#btnRecord', '#btnParse', '#btnSortClips', '#btnClearClips']) {
+  for (const id of ['#btnExportMp4', '#btnExportSrt', '#btnExportWav', '#btnRecord', '#btnParse', '#btnSortClips', '#btnClearClips']) {
     const b = $(id);
     if (b) b.disabled = busy;
   }
@@ -2138,6 +2139,40 @@ async function recordRealtime() {
   }
 }
 
+function audioBufferToWav(buffer) {
+  const ch = Math.min(2, buffer.numberOfChannels);
+  const sr = buffer.sampleRate;
+  const len = buffer.length;
+  const ab = new ArrayBuffer(44 + len * ch * 2);
+  const v = new DataView(ab);
+  const str = (off, s) => { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + len * ch * 2, true); str(8, 'WAVE');
+  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, ch, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * ch * 2, true); v.setUint16(32, ch * 2, true); v.setUint16(34, 16, true);
+  str(36, 'data'); v.setUint32(40, len * ch * 2, true);
+  const chans = [];
+  for (let c = 0; c < ch; c++) chans.push(buffer.getChannelData(c));
+  let off = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < ch; c++) {
+      const s = Math.max(-1, Math.min(1, chans[c][i]));
+      v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      off += 2;
+    }
+  }
+  return new Blob([ab], { type: 'audio/wav' });
+}
+
+function exportWav() {
+  if (!S.audio.master || S.audio.master.length < 100) { toast('나레이션·BGM을 먼저 올려 주세요'); return; }
+  const blob = audioBufferToWav(S.audio.master);
+  const name = exportName('wav');
+  downloadBlob(blob, name);
+  showResult(name, blob.size, '오디오 WAV (48kHz 16bit)', blob);
+  logExport('오디오 WAV 저장 · ' + fmtSec(S.audio.master.duration));
+  toast('오디오 WAV 다운로드 시작');
+}
+
 function exportSRT() {
   const srt = buildSRT();
   if (!srt.trim()) { toast('자막이 없어요. 대본을 먼저 나눠 주세요'); return; }
@@ -2189,6 +2224,24 @@ function bindClips() {
       if (!S.clips.length) S.play.t = 0;
     }
     afterClipsChanged();
+  });
+  list.addEventListener('input', (e) => {
+    const li = e.target.closest('.clip');
+    if (!li) return;
+    const c = S.clips.find((x) => x.id === li.dataset.id);
+    const k = e.target.dataset.k;
+    if (!c || !k || k === 'speed') return;
+    const v = parseFloat(e.target.value);
+    if (!isFinite(v)) return;
+    if (k === 'trimStart') c.trimStart = clamp(v, 0, c.trimEnd - 0.1);
+    if (k === 'trimEnd') c.trimEnd = clamp(v, c.trimStart + 0.1, c.duration);
+    const meta = li.querySelector('.clip-meta');
+    if (meta) meta.innerHTML = clipMetaInner(c);
+    renderTimeline();
+    if (S.subsAuto) { redistributeSubs(); renderSubs(); }
+    updateAllStats();
+    scheduleMaster();
+    scheduleDraw();
   });
   list.addEventListener('change', (e) => {
     const li = e.target.closest('.clip');
@@ -2520,6 +2573,7 @@ function bindTransport() {
 function bindExport() {
   $('#btnExportMp4').addEventListener('click', exportMP4);
   $('#btnExportSrt').addEventListener('click', exportSRT);
+  $('#btnExportWav').addEventListener('click', exportWav);
   $('#btnRecord').addEventListener('click', recordRealtime);
   $('#btnCancelExport').addEventListener('click', () => { S.exporting.cancel = true; logExport('취소 요청…'); });
   $('#btnHelp').addEventListener('click', () => { const d = $('#helpDialog'); if (d.showModal) d.showModal(); });
