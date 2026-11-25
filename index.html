@@ -225,6 +225,25 @@
   @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   .rise{animation:rise .28s ease both}
   @media (prefers-reduced-motion: reduce){*{animation-duration:.001s !important;transition-duration:.001s !important}}
+
+  /* 자동 편집기 이동 배너 */
+  .editor-banner{
+    display:flex;align-items:center;gap:11px;margin:0 0 12px;padding:12px 14px;
+    background:linear-gradient(135deg,#FFF1F5,#FFF8EE);border:1px solid #F7D9E2;border-radius:16px;
+    text-decoration:none;color:inherit;box-shadow:0 1px 2px rgba(60,30,40,.04);
+  }
+  .editor-banner:active{transform:translateY(1px)}
+  .editor-banner .eb-ic{font-size:22px;line-height:1;flex:0 0 auto}
+  .editor-banner .eb-text{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+  .editor-banner .eb-text strong{font-size:14px;font-weight:800;letter-spacing:-.02em;color:#231A1E}
+  .editor-banner .eb-text span{font-size:11.5px;color:#8E7F86;line-height:1.45}
+  .editor-banner .eb-go{flex:0 0 auto;font-size:12px;font-weight:800;color:#C11A47;background:#fff;border:1px solid #F3D3DE;border-radius:999px;padding:5px 10px}
+  @media (prefers-color-scheme: dark){
+    .editor-banner{background:linear-gradient(135deg,#2A1B21,#2A231C);border-color:#412832}
+    .editor-banner .eb-text strong{color:#F6EEEF}
+    .editor-banner .eb-text span{color:#93838A}
+    .editor-banner .eb-go{background:#231A1D;border-color:#412832;color:#FFA3B8}
+  }
 </style>
 </head>
 <body>
@@ -234,6 +253,12 @@
     <div class="head-top"><span class="mark" aria-hidden="true">🎬</span><h1>릴스 대본 스튜디오</h1></div>
     <p class="sub">제품 소구점과 레퍼런스 영상만 올리면, 바로 읽을 수 있는 20·30초 뷰티 릴스 나레이션이 나와요.</p>
   </header>
+
+  <a class="editor-banner" href="editor/" aria-label="릴스 자동 편집기 열기">
+    <span class="eb-ic" aria-hidden="true">🎬</span>
+    <span class="eb-text"><strong>릴스 자동 편집기</strong><span>여기서 뽑은 대본 + 찍어 둔 클립 → 9:16 자막·나레이션·MP4까지 한 번에</span></span>
+    <span class="eb-go">열기 →</span>
+  </a>
 
   <!-- API 설정 -->
   <details class="card" id="apiCard" open>
