@@ -393,6 +393,39 @@
   .modal-body li{margin:3px 0}
   .modal-body .kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--card-2)}
 
+  /* ---------- ✨ AI 자동 편집 카드 ---------- */
+  .aicard{
+    margin:14px 16px 0;padding:14px 14px 13px;border-radius:16px;
+    background:linear-gradient(150deg,#2A1220,#3E1526 55%,#25101B);
+    color:#FFE9EF;box-shadow:0 16px 34px -20px rgba(60,10,30,.75);
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .ai-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:11px}
+  .ai-badge{flex:0 0 auto;font-size:10px;font-weight:900;letter-spacing:.08em;color:#2A1220;background:linear-gradient(135deg,#FFE600,#FF9E5C);padding:3px 7px;border-radius:6px;margin-top:2px}
+  .ai-title{font-size:12.5px;line-height:1.45;color:#F0CBD9}
+  .ai-title b{color:#fff}
+  .btn.ai-run{
+    width:100%;padding:13px 12px;font-size:15px;font-weight:900;letter-spacing:-.01em;
+    background:linear-gradient(135deg,#FF5C8D,#F4436F 55%,#FF8A3D);
+    border:0;color:#fff;border-radius:13px;
+    box-shadow:0 12px 24px -12px rgba(244,67,111,.95);
+  }
+  .btn.ai-run:hover{filter:brightness(1.06);color:#fff}
+  .btn.ai-run:disabled{opacity:.6;filter:none;cursor:progress}
+  .ai-progress{margin-top:10px;height:8px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden}
+  .ai-progress i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#FFE600,#FF8A3D,#FF5C8D);transition:width .25s ease}
+  .ai-status{margin:9px 0 0;font-size:11.5px;line-height:1.5;color:#E4BCCA;min-height:17px}
+  .ai-status.warn{color:#FFC46B}
+  .ai-status.ok{color:#8FF0C0}
+  .ai-key{display:flex;gap:6px;margin-top:10px}
+  .ai-key input{flex:1;min-width:0;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:9px;padding:7px 9px;font-size:11.5px;font-family:var(--mono);width:auto}
+  .ai-key input::placeholder{color:rgba(255,255,255,.45)}
+  .ai-key .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff}
+  .ai-keynote{margin:6px 0 0;font-size:10.5px;line-height:1.4;color:rgba(255,255,255,.52)}
+  .sfx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+  .sfx-grid .btn{padding:7px 3px;font-size:11px;flex-direction:column;gap:2px;line-height:1.2}
+  .sfx-grid .btn .em{font-size:14px;line-height:1}
+
   @media (max-width:1080px){
     .layout{grid-template-columns:1fr;max-width:720px}
     .stage{position:static}
@@ -447,6 +480,21 @@
 
   <!-- ===== 패널 ===== -->
   <aside class="side">
+    <section class="aicard" aria-label="AI 자동 편집">
+      <div class="ai-head">
+        <span class="ai-badge">AI</span>
+        <span class="ai-title">영상 · 대본 · 나레이션 넣고<br><b>버튼 한 번</b>으로 컷 · 자막 · 효과음까지</span>
+      </div>
+      <button class="btn ai-run" id="btnAiEdit" type="button">✨ AI 자동 편집하기</button>
+      <div class="ai-progress" id="aiProgressWrap" hidden><i id="aiProgressBar"></i></div>
+      <p class="ai-status" id="aiStatus">① 영상 → ② 대본 → ③ 나레이션 순서로 넣고 눌러 주세요.</p>
+      <div class="ai-key">
+        <input type="password" id="aiKey" placeholder="Gemini API 키 (선택 · 없으면 스마트 폴백)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Gemini API 키" />
+        <button class="btn ghost sm" id="btnAiKeySave" type="button">키 저장</button>
+      </div>
+      <p class="ai-keynote" id="aiKeyHint">키는 이 브라우저에만 저장돼요 (③ 오디오 TTS와 같은 키)</p>
+    </section>
+
     <nav class="tabs" role="tablist" aria-label="편집 패널">
       <button class="tab" role="tab" id="tab-clips" aria-controls="pane-clips" aria-selected="true" data-pane="clips">① 클립 <span class="dot" id="dotClips" hidden></span></button>
       <button class="tab" role="tab" id="tab-script" aria-controls="pane-script" aria-selected="false" data-pane="script">② 대본·자막</button>
@@ -641,6 +689,26 @@
           </div>
         </section>
         <section>
+          <h3>효과음 (SFX) <span class="opt" id="sfxCount">자동</span></h3>
+          <label class="switch"><input type="checkbox" id="sfxToggle" checked /> 효과음 자동 넣기</label>
+          <div class="field">
+            <div class="lbl-row"><span class="lbl">효과음 볼륨</span><output class="v" id="sfxOut">55%</output></div>
+            <input type="range" id="sfxRange" min="0" max="1" step="0.01" value="0.55" aria-label="효과음 볼륨" />
+          </div>
+          <div class="sfx-grid" id="sfxPreview">
+            <button class="btn ghost sm" type="button" data-sfx="pop"><span class="em">💥</span>톡! 팝</button>
+            <button class="btn ghost sm" type="button" data-sfx="whoosh"><span class="em">🌬️</span>휙~ 휘시</button>
+            <button class="btn ghost sm" type="button" data-sfx="sparkle"><span class="em">✨</span>반짝</button>
+            <button class="btn ghost sm" type="button" data-sfx="ding"><span class="em">🔔</span>딩동</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn sm" id="btnSfxAuto" type="button">효과음 자동 배치</button>
+            <button class="btn ghost sm" id="btnSfxClear" type="button">효과음 끄기</button>
+          </div>
+          <p class="hint">오프닝 <b>톡!</b>, 컷 전환 <b>휙~</b>, 소구점 <b>반짝✨</b>, 할인·마무리 <b>딩동</b>이 자동으로 깔리고 미리보기·MP4·WAV에 똑같이 섞여요.</p>
+          <div class="stats" id="sfxStats" style="margin-top:10px"></div>
+        </section>
+        <section>
           <h3>BGM <span class="opt">선택</span></h3>
           <div class="drop small" id="bgmDrop" role="button" tabindex="0" aria-label="BGM 파일 선택">
             <input id="bgmInput" type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg" hidden />
@@ -800,6 +868,12 @@
 <dialog id="helpDialog">
   <div class="modal-head"><h2>사용법</h2><button class="btn ghost sm" id="btnHelpClose" type="button">닫기</button></div>
   <div class="modal-body">
+    <h3>✨ AI 자동 편집 (원클릭)</h3>
+    <ol>
+      <li>① 클립에 <b>5분 통영상</b>을 올리고, ② 대본을 붙여넣어 <b>자막으로 나누기</b>, ③ 오디오에 <b>나레이션</b>을 올려요. (나레이션이 없으면 2.6초/컷 기본 템포로 잡아요)</li>
+      <li>맨 위 <b>✨ AI 자동 편집하기</b>를 누르면 영상 프레임을 훑어 대본 순서에 맞는 구간을 골라 컷으로 붙여요. (Gemini 키가 있으면 AI가 장면을 직접 보고, 없으면 장면 전환이 큰 곳으로 자동 배치)</li>
+      <li>첫 줄은 오프닝 타이틀로 올라가고, 나머지 자막은 컷 길이에 맞춰져요. 마음에 안 드는 컷만 ①에서 미세조정하면 돼요.</li>
+    </ol>
     <h3>1. 클립 — 통영상에서 컷 따기</h3>
     <ol>
       <li><b>① 클립</b> 위쪽 <b>통영상에서 컷 따기</b>에 5분짜리 원테이크 영상을 하나 올려요. (아래 클립 칸에 올린 영상도 소스로 바로 골라 쓸 수 있어요)</li>
@@ -819,6 +893,7 @@
       <li>나레이션은 캡컷 TTS에서 뽑은 <b>mp3·m4a·wav</b>를 올리면 파형을 분석해 <b>숨 고르기·빈 구간을 자동으로 잘라내요</b>. TTS를 넣은 <b>mp4·mov 영상</b>을 올려도 소리만 뽑아서 똑같이 처리해요.</li>
       <li>무음 기준(dB)과 최소 무음 길이를 조절하고 <b>다시 분석</b>.</li>
       <li>BGM을 올리고 볼륨을 나레이션보다 낮게 잡아요.</li>
+      <li><b>효과음(SFX)</b>은 자동으로 깔려요 — 오프닝 톡!, 컷 전환 휙~, 소구점 반짝✨, 할인·마무리 딩동. 볼륨과 4가지 미리듣기, <b>효과음 자동 배치</b> 버튼이 있어요.</li>
     </ol>
     <h3>4. 내보내기</h3>
     <ol>
@@ -950,6 +1025,7 @@ const S = {
   subStyle: { font: 'jua', color: COLORS.yellow, outline: COLORS.brown, scale: 1, y: 0.76, plate: false },
   narration: { name: '', buffer: null, duration: 0, cut: true, kept: [], removed: 0, th: -38, min: 0.24, peaks: null },
   bgm: { name: '', buffer: null, gain: 0.22 },
+  sfx: { on: true, auto: true, gain: 0.55, events: [] },
   settings: { w: 1080, h: 1920, fps: 30, fit: true, crop: 'cover', showSafe: true },
   play: { t: 0, playing: false },
   srcViewer: { src: null, speed: 1, inT: null, outT: null, playing: false, muted: true, raf: 0, rangeEnd: null },
@@ -2168,6 +2244,8 @@ function scheduleMaster() {
 async function buildMaster() {
   const seq = ++masterSeq;
   const L = layout();
+  if (!S.sfx.on) S.sfx.events = [];
+  else if (S.sfx.auto) S.sfx.events = planSfxEvents(L);
   const T = Math.max(0.05, L.total);
   const sr = 48000;
   try {
@@ -2196,6 +2274,23 @@ async function buildMaster() {
       b.connect(g);
       b.start(0);
       b.stop(Math.max(0.06, T));
+    }
+    /* 효과음(SFX): 컷·자막·오프닝 위치마다 합성한 버퍼를 얹는다. 미리보기·MP4·WAV가 모두 이 마스터를 쓴다. */
+    if (S.sfx.on && S.sfx.events.length && S.sfx.gain > 0.001) {
+      for (const ev of S.sfx.events) {
+        if (!SFX_SPEC[ev.type]) continue;
+        if (ev.t < 0 || ev.t > T - 0.02) continue;
+        const data = sfxPcm(ev.type, sr);
+        const b = oc.createBuffer(1, data.length, sr);
+        b.copyToChannel(data, 0);
+        const g = oc.createGain();
+        g.gain.value = clamp(S.sfx.gain * (ev.gain == null ? 1 : ev.gain), 0, 2);
+        g.connect(oc.destination);
+        const s = oc.createBufferSource();
+        s.buffer = b;
+        s.connect(g);
+        s.start(Math.max(0, ev.t));
+      }
     }
     const rendered = await oc.startRendering();
     if (seq !== masterSeq) return;
@@ -2605,6 +2700,783 @@ function bindTTS() {
   if (tabAudio) tabAudio.addEventListener('click', () => { if (!TTS.edited) syncTtsFromSubs(false); });
 }
 
+/* =========================================================
+   릴스 효과음(SFX) — Web Audio로 직접 합성 (외부 오디오 URL 없음)
+   pop: 오프닝 톡! / whoosh: 컷 전환 휙~ / sparkle: 소구점 반짝✨ / ding: 할인·마무리 딩동
+   ========================================================= */
+const SFX_SPEC = {
+  pop: { dur: 0.26, label: '톡! 팝' },
+  whoosh: { dur: 0.52, label: '휙~ 휘시' },
+  sparkle: { dur: 1.05, label: '반짝✨' },
+  ding: { dur: 0.9, label: '딩동' },
+};
+const sfxCache = new Map();
+
+/* 같은 효과음은 샘플레이트별로 한 번만 계산해 둔다 (오프라인 렌더·미리듣기 공용) */
+function sfxPcm(type, sr = 48000) {
+  const key = type + '@' + sr;
+  const hit = sfxCache.get(key);
+  if (hit) return hit;
+  const spec = SFX_SPEC[type] || SFX_SPEC.pop;
+  const n = Math.max(64, Math.round(sr * spec.dur));
+  const out = new Float32Array(n);
+  let seed = 20261;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return (seed / 0x7fffffff) * 2 - 1; };
+
+  if (type === 'pop') {
+    /* 짧게 톡 튀는 사인 — 피치가 빠르게 떨어지고 앞머리에 아주 짧은 클릭 */
+    let phase = 0;
+    for (let i = 0; i < n; i++) {
+      const t = i / sr;
+      const f = 200 + 980 * Math.exp(-t / 0.036);
+      phase += (2 * Math.PI * f) / sr;
+      const body = Math.sin(phase) * Math.exp(-t / 0.055);
+      const click = t < 0.007 ? rnd() * 0.45 * (1 - t / 0.007) : 0;
+      out[i] = body + click;
+    }
+  } else if (type === 'whoosh') {
+    /* 노이즈를 밴드패스로 훑는 휙~ 사운드 (중심 주파수 300→3300→낮게) */
+    let low = 0, band = 0;
+    for (let i = 0; i < n; i++) {
+      const t = i / sr;
+      const p = clamp(t / spec.dur, 0, 1);
+      const shape = Math.sin(Math.PI * Math.pow(p, 0.85));
+      const fc = 260 + 3200 * shape;
+      const f = 2 * Math.sin(Math.PI * Math.min(0.45, fc / sr));
+      const q = 0.62;
+      low += f * band;
+      const high = rnd() * 0.95 - low - q * band;
+      band += f * high;
+      out[i] = band * Math.pow(shape, 1.5) * 1.15;
+    }
+  } else if (type === 'sparkle') {
+    /* 반짝 — 높은 벨 4개를 살짝씩 어긋나게 겹친다 */
+    const notes = [2093.0, 2637.0, 3136.0, 4186.0];
+    notes.forEach((freq, k) => {
+      const start = Math.round(sr * (0.01 + k * 0.052));
+      for (let i = start; i < n; i++) {
+        const t = (i - start) / sr;
+        const env = Math.exp(-t / 0.21) * (1 - Math.exp(-t / 0.0035));
+        out[i] += (Math.sin(2 * Math.PI * freq * t) * 0.34 + Math.sin(2 * Math.PI * freq * 2.01 * t) * 0.09) * env;
+      }
+    });
+  } else {
+    /* 딩동 — 두 음(1318.5Hz → 987.8Hz)을 벨 느낌으로 */
+    const bell = (freq, t0, amp) => {
+      const st = Math.round(sr * t0);
+      for (let i = st; i < n; i++) {
+        const t = (i - st) / sr;
+        const env = Math.exp(-t / 0.26) * Math.min(1, t / 0.003);
+        out[i] += (Math.sin(2 * Math.PI * freq * t)
+          + 0.42 * Math.sin(2 * Math.PI * freq * 2 * t) * Math.exp(-t / 0.075)
+          + 0.16 * Math.sin(2 * Math.PI * freq * 3.01 * t) * Math.exp(-t / 0.05)) * env * amp;
+      }
+    };
+    bell(1318.51, 0, 0.62);
+    bell(987.77, 0.155, 0.56);
+  }
+
+  let peak = 0;
+  for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(out[i]));
+  if (peak > 0.0001) {
+    const g = 0.82 / peak;
+    for (let i = 0; i < n; i++) out[i] = clamp(out[i] * g, -1, 1);
+  }
+  sfxCache.set(key, out);
+  return out;
+}
+
+let sfxPreviewGain = null;
+async function previewSfx(type) {
+  const ctx = await ensureAudioCtx();
+  if (!ctx) { toast('이 브라우저에서는 소리를 낼 수 없어요'); return; }
+  try {
+    const data = sfxPcm(type, ctx.sampleRate);
+    const buf = ctx.createBuffer(1, data.length, ctx.sampleRate);
+    buf.copyToChannel(data, 0);
+    const g = ctx.createGain();
+    g.gain.value = clamp(S.sfx.gain, 0, 1);
+    g.connect(S.audio.gain);
+    const s = ctx.createBufferSource();
+    s.buffer = buf;
+    s.connect(g);
+    s.start();
+    sfxPreviewGain = g;
+  } catch (e) { toast('효과음을 재생하지 못했어요'); }
+}
+
+/* 대본 문장에서 효과음이 어울리는 곳을 고른다 */
+const SFX_ACCENT = [
+  { type: 'ding', re: /(할인|반값|무료|공짜|쿠폰|특가|최저가|덤|1\s*\+\s*1|세일|이벤트|가격|원\b|%|마무리|마무리로|끝|완성|꿀팁|지금 바로|링크|프로필)/ },
+  { type: 'sparkle', re: /(핵심|포인트|비결|치트키|꿀조합|미친|역대급|완벽|진짜|광\b|광채|촉촉|흡수|발림|밀착|톤|결\b|지속|보습|수분|탄력|1위|베스트|추천|신세계|레전드|대박)/ },
+];
+
+/* 타임라인 + 자막에서 효과음 배치를 계산한다 */
+function planSfxEvents(L) {
+  const events = [];
+  if (!S.clips.length || !(L.total > 0.2)) return events;
+  const total = L.total;
+  events.push({ type: 'pop', t: 0, gain: 1, why: '오프닝' });
+  /* 컷 전환마다 휙~ (너무 촘촘하면 건너뛴다) */
+  L.segs.forEach((seg, i) => {
+    if (i === 0) return;
+    const t = seg.start;
+    if (t < 0.35) return;
+    if (events.some((e) => e.type === 'whoosh' && Math.abs(e.t - t) < 0.5)) return;
+    events.push({ type: 'whoosh', t: round2(t), gain: 0.85, why: `${i + 1}번째 컷 전환` });
+  });
+  /* 자막 키워드 → 반짝 / 딩동 */
+  const maxAccents = clamp(Math.round(total / 2.4), 2, 10);
+  let lastAccent = -9;
+  let accents = 0;
+  S.subs.forEach((s, i) => {
+    const text = String(s.text || '');
+    if (!text.trim() || i === 0) return;
+    if (s.end - s.start < 0.3) return;
+    if (accents >= maxAccents) return;
+    if (s.start - lastAccent < 1.1) return;
+    const hit = SFX_ACCENT.find((a) => a.re.test(text));
+    if (!hit) return;
+    events.push({
+      type: hit.type, t: round2(Math.max(0.08, s.start + 0.02)), gain: 1,
+      why: `${i + 1}번째 자막 · ${hit.type === 'ding' ? '할인/마무리' : '소구점'}`,
+    });
+    lastAccent = s.start;
+    accents += 1;
+  });
+  /* 마무리 딩동 — 마지막 자막 근처에 딩이 없으면 한 번 */
+  if (S.subs.length > 1) {
+    const last = S.subs[S.subs.length - 1];
+    const hasDing = events.some((e) => e.type === 'ding' && Math.abs(e.t - last.start) < 1.3);
+    if (!hasDing && last.start > 0.8 && last.end - 0.3 > last.start) {
+      events.push({ type: 'ding', t: round2(last.start + 0.02), gain: 0.9, why: '마무리 포인트' });
+    }
+  }
+  events.sort((a, b) => a.t - b.t);
+  const out = [];
+  for (const ev of events) {
+    if (ev.t > total - 0.03) continue;
+    if (out.some((o) => Math.abs(o.t - ev.t) < 0.16)) continue;
+    out.push(ev);
+  }
+  return out;
+}
+
+function refreshSfxUI() {
+  const out = $('#sfxOut');
+  if (out) out.textContent = Math.round(S.sfx.gain * 100) + '%';
+  const tgl = $('#sfxToggle');
+  if (tgl) tgl.checked = !!S.sfx.on;
+  const rng = $('#sfxRange');
+  if (rng) rng.value = String(S.sfx.gain);
+  const cnt = $('#sfxCount');
+  if (cnt) cnt.textContent = S.sfx.on ? (S.sfx.events.length + '개') : 'OFF';
+  const stats = $('#sfxStats');
+  if (!stats) return;
+  if (!S.sfx.on) {
+    stats.innerHTML = '<div class="r"><span>효과음</span><b>OFF</b></div>';
+    return;
+  }
+  const c = { pop: 0, whoosh: 0, sparkle: 0, ding: 0 };
+  for (const e of S.sfx.events) c[e.type] = (c[e.type] || 0) + 1;
+  stats.innerHTML = [
+    `<div class="r"><span>깔린 효과음</span><b class="${S.sfx.events.length ? 'ok' : 'warn'}">${S.sfx.events.length}개</b></div>`,
+    `<div class="r"><span>톡 · 휙 · 반짝 · 딩동</span><b>${c.pop} · ${c.whoosh} · ${c.sparkle} · ${c.ding}</b></div>`,
+  ].join('');
+}
+
+/* =========================================================
+   ✨ AI 자동 편집 — 영상 프레임 ↔ 대본 자막 매칭 → 컷 자동 배치
+   ========================================================= */
+const AI = {
+  keyName: 'reels.gemini.key',
+  cacheKey: 'reels.ai.models',
+  modelPickKey: 'reels.ai.model',
+  maxFrames: 60,
+  busy: false,
+  lastEngine: '',
+  lastError: '',
+};
+
+function aiSetStatus(msg, kind = '') {
+  const el = $('#aiStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'ai-status' + (kind ? ' ' + kind : '');
+  const top = $('#topStatus');
+  if (top && S.clips.length) top.textContent = msg.length > 48 ? msg.slice(0, 46) + '…' : msg;
+}
+
+function aiSetProgress(pct, label) {
+  const wrap = $('#aiProgressWrap');
+  const bar = $('#aiProgressBar');
+  if (!wrap || !bar) return;
+  wrap.hidden = false;
+  bar.style.width = clamp(pct, 0, 100).toFixed(1) + '%';
+  if (label) aiSetStatus(label + ' …');
+}
+
+function setAiBusy(busy) {
+  AI.busy = busy;
+  const btn = $('#btnAiEdit');
+  if (btn) { btn.disabled = busy; btn.textContent = busy ? '✨ 편집하는 중…' : '✨ AI 자동 편집하기'; }
+  for (const id of ['#btnAiKeySave', '#btnSfxAuto', '#btnSfxClear', '#btnExportMp4', '#btnExportWav']) {
+    const b = $(id);
+    if (b && busy) b.disabled = true;
+    else if (b && !busy && id !== '#btnExportMp4' && id !== '#btnExportWav') b.disabled = false;
+  }
+  if (!busy && S.exporting && S.exporting.busy) setExportUI(true);
+}
+
+function refreshAiKeyNote() {
+  const saved = lsGet(AI.keyName, '');
+  const note = $('#aiKeyHint');
+  if (note) {
+    note.textContent = saved
+      ? '키 저장됨 · Gemini가 장면을 보고 컷을 잡아요'
+      : '키는 이 브라우저에만 저장돼요 (없으면 스마트 폴백)';
+    note.style.color = saved ? 'rgba(143,240,192,.8)' : 'rgba(255,255,255,.52)';
+  }
+  const input = $('#aiKey');
+  if (input && saved && !input.value) input.value = saved;
+}
+
+function switchPane(name) {
+  const tab = document.querySelector(`.tab[data-pane="${name}"]`);
+  if (tab) tab.click();
+}
+
+function aiPickSource() {
+  if (S.srcViewer.src) return S.srcViewer.src;
+  const list = sourceList();
+  if (list.length) return list[0];
+  if (S.clips.length && S.clips[0].src) return S.clips[0].src;
+  return null;
+}
+
+function aiReadScript() {
+  const raw = String(($('#scriptInput') || {}).value || '').trim();
+  if (raw) {
+    const blocks = parseScript(raw);
+    if (blocks.length) return { blocks, from: 'script' };
+  }
+  if (S.subs.length) {
+    const blocks = S.subs.map((s) => ({ id: s.id || uid(), text: s.text, color: s.color || S.subStyle.color }));
+    if (blocks.length) return { blocks, from: 'subs' };
+  }
+  return null;
+}
+
+/* 나레이션(또는 기본 템포)에 맞춰 자막 블록별 목표 길이를 나눈다 */
+function aiDurations(blocks, totalSec) {
+  const weights = blocks.map((b) => Math.max(5, String(b.text || '').replace(/\s/g, '').length));
+  const sum = weights.reduce((a, b) => a + b, 0) || 1;
+  let d = weights.map((w) => Math.max(0.8, (totalSec * w) / sum));
+  const s2 = d.reduce((a, b) => a + b, 0) || 1;
+  return d.map((x) => (x * totalSec) / s2);
+}
+
+/* 소스 영상에서 일정 간격으로 저해상도 JPEG 프레임 + 정확한 시간을 뽑는다 */
+async function extractAiFrames(src, onProgress) {
+  const dur = src.duration || 0;
+  if (!(dur > 0.2)) throw new Error('영상 길이를 읽지 못했어요');
+  const interval = Math.max(1, Math.min(6, dur / AI.maxFrames));
+  const count = clamp(Math.ceil(dur / interval), 8, AI.maxFrames);
+  const el = src.el;
+  const wasT = el.currentTime || 0;
+  const wasPaused = el.paused;
+  try { el.pause(); } catch (e) {}
+  const c = document.createElement('canvas');
+  c.width = 270; c.height = 480;
+  const x = c.getContext('2d');
+  const frames = [];
+  for (let i = 0; i < count; i++) {
+    const t = clamp((dur * (i + 0.5)) / count, 0, Math.max(0, dur - 0.05));
+    await seekEl(el, t, 1600);
+    if (typeof el.requestVideoFrameCallback === 'function') {
+      await new Promise((res) => {
+        let done = false;
+        const fin = () => { if (!done) { done = true; res(); } };
+        try { el.requestVideoFrameCallback(fin); } catch (e) { fin(); }
+        setTimeout(fin, 110);
+      });
+    }
+    let data = '';
+    try {
+      coverDraw(x, el, 270, 480, 'cover');
+      data = c.toDataURL('image/jpeg', 0.55).split(',')[1] || '';
+    } catch (e) { data = ''; }
+    if (data) frames.push({ t: round2(t), data });
+    if (onProgress) onProgress((i + 1) / count);
+  }
+  try { el.currentTime = wasT; if (!wasPaused) { /* 소스 뷰어가 재생 중이었으면 그대로 둔다 */ } } catch (e) {}
+  if (!frames.length) throw new Error('영상 프레임을 읽지 못했어요. 다른 mp4(H.264)로 시도해 주세요');
+  return { frames, duration: dur, interval };
+}
+
+/* /v1beta/models 로 이 키에 열린 모델을 확인하고, 장면 분석에 쓸 flash 계열을 고른다 */
+async function aiDiscoverModels(key) {
+  const cached = lsGet(AI.cacheKey, '');
+  if (cached) {
+    try {
+      const c = JSON.parse(cached);
+      if (c && c.t && Date.now() - c.t < 12 * 3600 * 1000 && Array.isArray(c.list) && c.list.length) return c.list;
+    } catch (e) {}
+  }
+  const list = [];
+  let token = '';
+  let pages = 0;
+  do {
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=200' + (token ? '&pageToken=' + encodeURIComponent(token) : '');
+    const res = await fetch(url, { method: 'GET', headers: { 'x-goog-api-key': key }, cache: 'no-store' });
+    if (!res.ok) throw new Error(await aiApiMessage(res));
+    const j = await res.json();
+    for (const m of (j.models || [])) {
+      const id = String(m.baseModelId || m.name || '').replace(/^models\//, '').trim();
+      if (!id || !/^gemini-/.test(id)) continue;
+      const methods = m.supportedGenerationMethods || [];
+      if (methods.length && methods.indexOf('generateContent') === -1) continue;
+      if (/embedding|imagen|veo|tts|live|native-audio|image|audio|learnlm|computer-use/i.test(id)) continue;
+      if (list.indexOf(id) === -1) list.push(id);
+    }
+    token = j.nextPageToken ? String(j.nextPageToken) : '';
+    pages += 1;
+  } while (token && pages < 4);
+  if (!list.length) throw new Error('이 키로 쓸 수 있는 Gemini 모델이 없어요');
+  lsSet(AI.cacheKey, JSON.stringify({ t: Date.now(), list }));
+  return list;
+}
+
+function aiRankModels(list) {
+  const score = (id) => {
+    let s = 0;
+    const v = id.match(/gemini-(\d+)(?:\.(\d+))?/);
+    if (v) s += Number(v[1]) * 10 + Number(v[2] || 0);
+    if (/-flash-lite/.test(id)) s -= 1;
+    else if (/-flash/.test(id)) s += 6;
+    if (/-pro/.test(id)) s -= 2;
+    if (/preview|exp|thinking/.test(id)) s -= 1.5;
+    if (/-tts|image|audio|live|embedding/.test(id)) s -= 30;
+    return s;
+  };
+  return list.slice().sort((a, b) => score(b) - score(a));
+}
+
+async function aiApiMessage(res) {
+  let detail = '';
+  try {
+    const j = await res.json();
+    if (j && j.error && typeof j.error.message === 'string') detail = j.error.message;
+  } catch (e) {}
+  const tail = detail ? ' [' + String(detail).slice(0, 160) + ']' : '';
+  if (res.status === 400 && /api[_ ]?key|API_KEY_INVALID|invalid/i.test(detail)) return 'Gemini API 키가 올바르지 않아요. 키를 다시 확인해 주세요' + tail;
+  if (res.status === 401 || res.status === 403) return '이 키로는 Gemini를 쓸 수 없어요 (권한/키 확인)' + tail;
+  if (res.status === 429) return 'Gemini 무료 사용량을 다 썼어요. 잠시 뒤 다시 시도해 주세요' + tail;
+  if (res.status === 413) return '프레임이 너무 많아 요청이 커요. 다음에 다시 시도해 주세요' + tail;
+  if (res.status === 404) return '이 키로는 그 모델을 쓸 수 없어요 (model not found)' + tail;
+  if (res.status >= 500) return 'Gemini 서버가 잠시 혼잡해요' + tail;
+  return 'Gemini 요청 실패 (HTTP ' + res.status + ')' + tail;
+}
+
+function aiStripJson(text) {
+  let t = String(text || '').trim();
+  t = t.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+  const a = t.indexOf('{');
+  const b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) t = t.slice(a, b + 1);
+  return t;
+}
+
+async function aiCallGemini(key, model, src, frames, blocks, durs) {
+  const dur = src.duration;
+  const lines = [];
+  lines.push('너는 한국 뷰티 크리에이터(@maengsuni.log)의 인스타그램 릴스 편집자다.');
+  lines.push('아래에는 원본 영상(총 ' + dur.toFixed(1) + '초)에서 뽑은 장면 프레임이 t=초 단위로 붙어 있고, 나레이션 대본 자막 블록 목록이 있다.');
+  lines.push('각 자막 블록의 말과 가장 잘 맞는 장면이 나오는 원본 영상 구간 [start, end]를 골라라.');
+  lines.push('');
+  lines.push('규칙:');
+  lines.push('- 구간은 0초 ~ ' + dur.toFixed(1) + '초 안. 블록 순서대로 start가 커져야 하고, 앞 블록과 같은 장면을 반복해서 쓰지 마라.');
+  lines.push('- 각 구간 길이는 target(초) 이상이어야 한다. target은 그 자막이 화면에 머무는 시간이다.');
+  lines.push('- 대본 키워드(손, 얼굴, 제품, 텍스처, 화장, 비교, 도포 등)와 실제 화면 내용이 맞는 곳을 우선한다.');
+  lines.push('- 프레임 간격은 약 ' + (frames.length > 1 ? Math.max(1, Math.round(frames[1].t - frames[0].t)) : 1) + '초라서 start/end는 프레임 사이 값이어도 된다.');
+  lines.push('- 확실하지 않으면 가장 자연스러운 장면을 고르고 why에 짧게 적어라.');
+  lines.push('');
+  lines.push('자막 블록:');
+  blocks.forEach((b, i) => {
+    lines.push(`${i}. "${String(b.text).replace(/"/g, "'")}" · target ${durs[i].toFixed(2)}초`);
+  });
+  lines.push('');
+  lines.push('출력은 JSON 하나만: {"cuts":[{"i":0,"start":0,"end":3.2,"why":"손등 비교"}]} — 모든 블록 i를 빠짐없이.');
+
+  const parts = [{ text: lines.join('\n') }];
+  for (const f of frames) {
+    parts.push({ text: 't=' + f.t + 's' });
+    parts.push({ inlineData: { mimeType: 'image/jpeg', data: f.data } });
+  }
+  const body = {
+    contents: [{ role: 'user', parts }],
+    generationConfig: {
+      temperature: 0.2,
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'OBJECT',
+        properties: {
+          cuts: {
+            type: 'ARRAY',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                i: { type: 'INTEGER' },
+                start: { type: 'NUMBER' },
+                end: { type: 'NUMBER' },
+                why: { type: 'STRING' },
+              },
+              required: ['i', 'start', 'end'],
+            },
+          },
+        },
+        required: ['cuts'],
+      },
+    },
+  };
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await aiApiMessage(res));
+  const j = await res.json();
+  const cand = (j.candidates && j.candidates[0]) || null;
+  const text = ((cand && cand.content && cand.content.parts) || []).map((p) => p.text || '').join('');
+  if (!text.trim()) throw new Error('Gemini가 컷 목록을 비워서 보냈어요');
+  let parsed = null;
+  try { parsed = JSON.parse(aiStripJson(text)); } catch (e) { throw new Error('Gemini 응답을 읽지 못했어요 (JSON 아님)'); }
+  const cuts = Array.isArray(parsed) ? parsed : (parsed && parsed.cuts);
+  if (!Array.isArray(cuts) || !cuts.length) throw new Error('Gemini가 컷 목록을 주지 않았어요');
+  return normalizeAiCuts(cuts, blocks.length, dur, durs);
+}
+
+/* Gemini가 준 구간을 0~길이 안, 순서대로, 최소 길이를 지키게 정리한다 */
+function normalizeAiCuts(cuts, n, dur, durs) {
+  const map = new Map();
+  for (const c of cuts) {
+    const i = Number(c && (c.i != null ? c.i : c.index));
+    if (!Number.isInteger(i) || i < 0 || i >= n) continue;
+    let s = Number(c.start), e = Number(c.end);
+    if (!isFinite(s) || !isFinite(e)) continue;
+    map.set(i, { start: clamp(s, 0, dur), end: clamp(e, 0, dur), why: String(c.why || '') });
+  }
+  const out = [];
+  let prev = 0;
+  for (let i = 0; i < n; i++) {
+    const c = map.get(i);
+    const target = Math.max(0.45, durs[i] || 2.4);
+    let s = c ? c.start : prev;
+    let e = c ? c.end : Math.min(dur, s + target);
+    s = clamp(s, prev, Math.max(0, dur - 0.3));
+    if (e < s + 0.3) e = Math.min(dur, s + target);
+    e = clamp(e, s + 0.2, dur);
+    out.push({ i, start: round2(s), end: round2(e), why: c ? c.why : '자동 보정' });
+    prev = s + 0.05;
+  }
+  return out;
+}
+
+/* 키 없음/실패 시: 프레임 밝기 변화가 큰 지점(장면 전환)에 맞춰 균등 분배 */
+async function localScenePlan(src, blocks, durs, onProgress) {
+  const n = blocks.length;
+  const dur = src.duration;
+  const W = 48, H = 27;
+  const samples = clamp(Math.round(dur / 0.45), 24, 180);
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d', { willReadFrequently: true });
+  const el = src.el;
+  const wasT = el.currentTime || 0;
+  let prev = null;
+  const scores = new Array(samples).fill(0);
+  for (let k = 0; k < samples; k++) {
+    const t = clamp((dur * (k + 0.5)) / samples, 0, Math.max(0, dur - 0.05));
+    await seekEl(el, t, 1400);
+    let gray = null;
+    try {
+      x.drawImage(el, 0, 0, W, H);
+      const d = x.getImageData(0, 0, W, H).data;
+      gray = new Float32Array(W * H);
+      for (let i = 0; i < gray.length; i++) {
+        gray[i] = d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114;
+      }
+    } catch (e) { gray = null; }
+    if (gray && prev) {
+      let diff = 0;
+      for (let i = 0; i < gray.length; i++) diff += Math.abs(gray[i] - prev[i]);
+      scores[k] = diff / gray.length;
+    }
+    prev = gray;
+    if (onProgress) onProgress((k + 1) / samples);
+  }
+  try { el.currentTime = wasT; } catch (e) {}
+
+  const bounds = [];
+  for (let i = 1; i < n; i++) {
+    const ideal = (dur * i) / n;
+    const win = Math.max(0.35, dur / (n * 2.4));
+    let bestT = ideal;
+    let best = -1;
+    for (let k = 1; k < samples; k++) {
+      const t = (dur * (k + 0.5)) / samples;
+      if (Math.abs(t - ideal) > win) continue;
+      if (scores[k] > best) { best = scores[k]; bestT = t; }
+    }
+    const prevB = bounds.length ? bounds[bounds.length - 1] : 0;
+    const t = clamp(bestT, prevB + Math.min(0.9, dur / Math.max(2, n * 2)), Math.max(prevB + 0.5, dur - 0.35));
+    bounds.push(t);
+  }
+  const plan = [];
+  for (let i = 0; i < n; i++) {
+    plan.push({ i, start: round2(i === 0 ? 0 : bounds[i - 1]), end: round2(i === n - 1 ? dur : bounds[i]), why: '장면 변화 지점' });
+  }
+  return plan;
+}
+
+/* 계획대로 타임라인 클립·자막·오프닝 타이틀을 세팅한다 */
+function applyAiPlan(src, blocks, durs, plan) {
+  const dur = src.duration;
+  S.clips.length = 0;
+  S.subsAuto = false;
+  let made = 0;
+  for (const p of plan.slice().sort((a, b) => a.i - b.i)) {
+    const target = Math.max(0.4, durs[p.i] || 2.4);
+    let s = clamp(p.start, 0, Math.max(0, dur - 0.25));
+    let e = Math.min(dur, s + target);
+    if (e - s < 0.35) {
+      s = Math.max(0, e - Math.min(0.9, target));
+      e = Math.min(dur, s + Math.min(0.9, target));
+    }
+    const clip = addClipFromSource(src, s, e);
+    if (clip) made += 1;
+  }
+  if (!made) throw new Error('컷을 하나도 만들지 못했어요. 영상 구간을 확인해 주세요');
+
+  const L = layout();
+  const subs = L.segs.map((seg, i) => {
+    const b = blocks[Math.min(i, blocks.length - 1)];
+    return { id: uid(), text: b.text, start: round2(seg.start), end: round2(seg.end), color: S.subStyle.color };
+  });
+  /* 첫 줄은 오프닝 타이틀로 올리고 자막에서는 뺀다 (같은 문장이 두 번 보이지 않게) */
+  if (subs.length >= 2) {
+    const f = subs.shift();
+    S.title.on = true;
+    S.title.text = f.text;
+    S.title.start = 0;
+    S.title.end = round2(clamp(f.end, 1.2, 3.4));
+  } else if (subs.length === 1) {
+    S.title.on = true;
+    S.title.text = subs[0].text;
+    S.title.start = 0;
+    S.title.end = round2(clamp(subs[0].end, 1.2, 3.4));
+  }
+  S.subs = subs;
+  S.subsAuto = false;
+
+  afterClipsChanged();
+  renderSubs();
+  renderTimeline();
+  updateAllStats();
+  scheduleMaster();
+  scheduleDraw();
+
+  const titleOn = $('#titleOn');
+  const titleText = $('#titleText');
+  if (titleOn) titleOn.checked = !!S.title.on;
+  if (titleText) { titleText.value = S.title.text; titleAutoRows(titleText); }
+  updateTitleDur();
+  return { clips: made, subs: S.subs.length, total: L.total };
+}
+
+async function runAutoEdit() {
+  if (AI.busy) return;
+  if (S.exporting && S.exporting.busy) { toast('내보내기가 끝난 뒤에 눌러 주세요'); return; }
+
+  const src = aiPickSource();
+  if (!src) {
+    aiSetStatus('① 클립에 영상을 먼저 올려 주세요. 5분 통영상 하나면 충분해요.', 'warn');
+    toast('소스 영상을 먼저 올려 주세요', 2600);
+    switchPane('clips');
+    return;
+  }
+  const read = aiReadScript();
+  if (!read) {
+    aiSetStatus('② 대본을 붙여넣고 [자막으로 나누기]를 먼저 눌러 주세요.', 'warn');
+    toast('대본을 먼저 넣어 주세요', 2600);
+    switchPane('script');
+    return;
+  }
+  let blocks = read.blocks;
+  if (blocks.length > 40) {
+    blocks = blocks.slice(0, 40);
+    toast('자막이 많아 앞 40줄로 먼저 맞춰 볼게요', 2600);
+  }
+
+  const hasNarr = !!(S.narration.buffer && S.narration.duration > 0.3);
+  if (hasNarr && !S.narration.kept.length) reanalyzeNarration(false);
+  const T = hasNarr ? Math.max(0.8, narrationCutDuration()) : blocks.length * 2.6;
+  const durs = aiDurations(blocks, T);
+
+  AI.busy = true;
+  AI.lastError = '';
+  setAiBusy(true);
+  aiSetProgress(2, '입력 확인');
+  const t0 = performance.now();
+  try {
+    aiSetProgress(4, `영상에서 장면 ${Math.min(AI.maxFrames, Math.ceil(src.duration / Math.max(1, Math.min(6, src.duration / AI.maxFrames))))}장 뽑는 중`);
+    const ex = await extractAiFrames(src, (p) => aiSetProgress(4 + p * 24));
+    aiSetProgress(30, `장면 ${ex.frames.length}장 분석`);
+
+    let plan = null;
+    let engine = '';
+    const key = lsGet(AI.keyName, '').trim();
+    if (key) {
+      try {
+        const models = aiRankModels(await aiDiscoverModels(key));
+        const picks = models.slice(0, 3);
+        let lastErr = null;
+        for (const model of picks) {
+          try {
+            aiSetStatus(`${model}로 장면과 대본을 맞추는 중…`);
+            plan = await aiCallGemini(key, model, src, ex.frames, blocks, durs);
+            lsSet(AI.modelPickKey, model);
+            engine = 'Gemini · ' + model;
+            break;
+          } catch (e) {
+            lastErr = e;
+            if (!/모델|model|404|400/i.test(String(e.message))) break;
+          }
+        }
+        if (!plan) throw lastErr || new Error('Gemini 응답 실패');
+      } catch (e) {
+        AI.lastError = (e && e.message) || String(e);
+        ERRORS.push({ type: 'ai', message: 'Gemini 장면 매칭 실패: ' + AI.lastError });
+        plan = null;
+      }
+    } else {
+      AI.lastError = 'Gemini API 키가 없어요';
+    }
+
+    if (!plan) {
+      aiSetProgress(58, '스마트 폴백으로 장면 전환 지점을 찾는 중');
+      plan = await localScenePlan(src, blocks, durs, (p) => aiSetProgress(58 + p * 26));
+      engine = '스마트 폴백 · 장면 변화';
+    }
+
+    aiSetProgress(88, '타임라인에 컷 배치');
+    const result = applyAiPlan(src, blocks, durs, plan);
+
+    S.sfx.on = $('#sfxToggle') ? $('#sfxToggle').checked : S.sfx.on;
+    S.sfx.auto = true;
+    await buildMaster();
+    refreshSfxUI();
+    aiSetProgress(100, '완료');
+
+    const L = layout();
+    const sfxN = S.sfx.on ? S.sfx.events.length : 0;
+    let msg = `완료 · ${engine} · ${L.total.toFixed(1)}초 · 컷 ${result.clips}개 · 자막 ${result.subs}줄 · 효과음 ${sfxN}개`;
+    if (!hasNarr) msg += ' · 나레이션 없이 기본 템포(2.6초/컷)';
+    let kind = 'ok';
+    if (!key) { msg += ' · ' + AI.lastError + ' — 키를 넣으면 장면 맞춤이 좋아져요'; kind = 'warn'; }
+    else if (engine.indexOf('스마트') === 0) { msg += ' · ' + AI.lastError; kind = 'warn'; }
+    aiSetStatus(msg, kind);
+    AI.lastEngine = engine;
+    toast(`AI 자동 편집 완료 · ${L.total.toFixed(1)}초 · 효과음 ${sfxN}개`, 3200);
+    logExport(`AI 자동 편집 · ${engine} · 컷 ${result.clips} · ${((performance.now() - t0) / 1000).toFixed(1)}초`);
+  } catch (e) {
+    const m = (e && e.message) || '자동 편집에 실패했어요';
+    aiSetStatus(m, 'warn');
+    toast(m, 3400);
+    ERRORS.push({ type: 'ai', message: String(m) });
+  } finally {
+    AI.busy = false;
+    setAiBusy(false);
+  }
+}
+
+function bindAi() {
+  const btn = $('#btnAiEdit');
+  if (!btn) return;
+  btn.addEventListener('click', runAutoEdit);
+  const keyEl = $('#aiKey');
+  if (keyEl) {
+    keyEl.value = lsGet(AI.keyName, '');
+    $('#btnAiKeySave').addEventListener('click', () => {
+      const v = keyEl.value.trim();
+      if (!v) { toast('Gemini 키를 먼저 붙여넣어 주세요'); keyEl.focus(); return; }
+      lsSet(AI.keyName, v);
+      const ttsKey = $('#ttsKey');
+      if (ttsKey) ttsKey.value = v;
+      refreshTtsKeyNote();
+      refreshAiKeyNote();
+      toast('Gemini 키를 저장했어요 · 이제 장면을 보고 컷을 잡아요');
+    });
+  }
+  refreshAiKeyNote();
+
+  /* SFX 패널 */
+  const tgl = $('#sfxToggle');
+  if (tgl) {
+    tgl.addEventListener('change', () => {
+      S.sfx.on = tgl.checked;
+      S.sfx.auto = true;
+      scheduleMaster();
+      refreshSfxUI();
+      updateAllStats();
+      toast(S.sfx.on ? '효과음 자동 넣기 ON' : '효과음 OFF');
+    });
+  }
+  const rng = $('#sfxRange');
+  if (rng) {
+    rng.addEventListener('input', () => {
+      S.sfx.gain = parseFloat(rng.value) || 0;
+      const out = $('#sfxOut');
+      if (out) out.textContent = Math.round(S.sfx.gain * 100) + '%';
+    });
+    rng.addEventListener('change', () => { scheduleMaster(); refreshSfxUI(); });
+  }
+  const prev = $('#sfxPreview');
+  if (prev) {
+    prev.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-sfx]');
+      if (b) previewSfx(b.dataset.sfx);
+    });
+  }
+  const auto = $('#btnSfxAuto');
+  if (auto) {
+    auto.addEventListener('click', () => {
+      if (!S.clips.length) { toast('클립을 먼저 올려 주세요'); return; }
+      S.sfx.on = true;
+      S.sfx.auto = true;
+      S.sfx.events = planSfxEvents(layout());
+      scheduleMaster();
+      refreshSfxUI();
+      updateAllStats();
+      toast(`효과음 ${S.sfx.events.length}개를 배치했어요`);
+    });
+  }
+  const clear = $('#btnSfxClear');
+  if (clear) {
+    clear.addEventListener('click', () => {
+      S.sfx.on = false;
+      S.sfx.events = [];
+      if (tgl) tgl.checked = false;
+      scheduleMaster();
+      refreshSfxUI();
+      updateAllStats();
+      toast('효과음을 뺐어요');
+    });
+  }
+  refreshSfxUI();
+}
+
 /* ---------- 클립 UI ---------- */
 function renderClips() {
   const list = $('#clipList');
@@ -2798,17 +3670,20 @@ function updateAllStats() {
       `<div class="r"><span>해상도</span><b>${S.settings.w}×${S.settings.h} · ${S.settings.fps}fps</b></div>`,
       `<div class="r"><span>클립</span><b>${S.clips.length}개</b></div>`,
       `<div class="r"><span>자막 블록</span><b>${S.subs.length}개</b></div>`,
-      `<div class="r"><span>오디오</span><b>${hasAudio ? [S.narration.buffer ? '나레이션' : '', S.bgm.buffer ? 'BGM ' + Math.round(S.bgm.gain * 100) + '%' : ''].filter(Boolean).join(' + ') : '없음'}</b></div>`,
+      `<div class="r"><span>오디오</span><b>${hasAudio || (S.sfx.on && S.sfx.events.length) ? [S.narration.buffer ? '나레이션' : '', S.bgm.buffer ? 'BGM ' + Math.round(S.bgm.gain * 100) + '%' : '', (S.sfx.on && S.sfx.events.length) ? '효과음 ' + S.sfx.events.length + '개' : ''].filter(Boolean).join(' + ') : '없음'}</b></div>`,
     ].join('');
   }
   const er = $('#exportRes');
   if (er) er.textContent = `${S.settings.w}×${S.settings.h} · ${S.settings.fps}fps`;
   const mo = $('#masterInfo');
-  if (mo) mo.textContent = S.audio.master ? '오디오 믹스 ' + fmtSec(S.audio.master.duration) : '오디오 없음';
+  if (mo) mo.textContent = S.audio.master
+    ? '오디오 믹스 ' + fmtSec(S.audio.master.duration) + (S.sfx.on && S.sfx.events.length ? ' · 효과음 ' + S.sfx.events.length + '개' : '')
+    : '오디오 없음';
   const tl = $('#tlEmpty');
   if (tl) tl.hidden = S.clips.length > 0 && L.total > 0;
   const sc = $('#subCount');
   if (sc) sc.textContent = S.subs.length + '개';
+  refreshSfxUI();
   updateTransportUI();
 }
 
@@ -2891,7 +3766,7 @@ function setProgress(pct) {
 
 function setExportUI(busy) {
   S.exporting.busy = busy;
-  for (const id of ['#btnExportMp4', '#btnExportSrt', '#btnExportWav', '#btnRecord', '#btnParse', '#btnSortClips', '#btnClearClips']) {
+  for (const id of ['#btnExportMp4', '#btnExportSrt', '#btnExportWav', '#btnRecord', '#btnParse', '#btnSortClips', '#btnClearClips', '#btnAiEdit']) {
     const b = $(id);
     if (b) b.disabled = busy;
   }
@@ -3631,6 +4506,7 @@ async function init() {
   bindStyle();
   bindAudio();
   bindTTS();
+  bindAi();
   bindTransport();
   bindExport();
   renderAllChips();
@@ -3653,6 +4529,8 @@ window.__studio = {
   seekTo, startPlayback, pausePlayback, addClipFiles, openSource, addClipFromSource, srcAddCut,
   srcMarkIn, srcMarkOut, loadSourceIntoViewer, decodeAudioFromMedia, extractAudioTrack, loadNarration,
   reanalyzeNarration, exportMP4, exportSRT, renderChips,
+  ai: { run: runAutoEdit, state: AI, extractFrames: extractAiFrames, localPlan: localScenePlan, apply: applyAiPlan, models: aiDiscoverModels, rank: aiRankModels, normalize: normalizeAiCuts },
+  sfx: { plan: planSfxEvents, pcm: sfxPcm, preview: previewSfx, spec: SFX_SPEC },
   tts: { generate: generateTts, scriptFromSubs: ttsScriptFromSubs, syncFromSubs: syncTtsFromSubs, pcmToWav, inlineToWav, base64Bytes, state: TTS },
   fonts: { FONTS, FONT_WEIGHT, FONT_FAMILY, ensureFontLoaded, loadFonts, state: fontState },
   errors: ERRORS,
