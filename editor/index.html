@@ -3394,6 +3394,8 @@ async function runAutoEdit() {
     S.sfx.auto = true;
     await buildMaster();
     refreshSfxUI();
+    /* 첫 컷 프레임을 미리 물려 두어야 미리보기가 '클립을 올려 주세요'로 비어 보이지 않는다 */
+    await seekTo(0);
     aiSetProgress(100, '완료');
 
     const L = layout();
