@@ -1411,14 +1411,18 @@ function bindSourceViewer() {
   document.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const tgt = e.target;
-    if (tgt && tgt.closest && tgt.closest('input,textarea,select,button,a,[contenteditable="true"]')) return;
+    const typing = tgt && tgt.closest && tgt.closest('input,textarea,select,[contenteditable="true"]');
+    if (typing) return;
+    // 버튼에 포커스가 있어도 I/O/A는 동작해야 한다 (Enter만 버튼 클릭과 겹치니 통과)
+    const onControl = tgt && tgt.closest && tgt.closest('button,a');
     const pane = $('#pane-clips');
     if (!pane || pane.hidden) return;
     if (!S.srcViewer.src) return;
     const k = String(e.key || '').toLowerCase();
     if (k === 'i') { e.preventDefault(); srcMarkIn(); }
     else if (k === 'o') { e.preventDefault(); srcMarkOut(); }
-    else if (k === 'a' || e.key === 'Enter') { e.preventDefault(); srcAddCut(); }
+    else if (k === 'a') { e.preventDefault(); srcAddCut(); }
+    else if (e.key === 'Enter' && !onControl) { e.preventDefault(); srcAddCut(); }
   });
   updateSourceUI();
 }
