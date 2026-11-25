@@ -1580,10 +1580,12 @@ function wrapLines(ctx, text, maxWidth, maxLines) {
 function fitText(ctx, text, maxWidth, maxLines, baseSize, font, weight) {
   let size = baseSize;
   let lines = [];
-  for (let i = 0; i < 14; i++) {
+  // wrapLines는 넘치는 부분을 끝에서 …로 잘라내므로, 잘렸으면(…로 끝나면) 글자를 조금씩 줄여 다시 맞춘다.
+  for (let i = 0; i < 18; i++) {
     ctx.font = `${weight} ${Math.round(size)}px ${FONTS[font] || FONTS.jua}`;
     lines = wrapLines(ctx, text, maxWidth, maxLines);
-    if (lines.length <= maxLines || size <= baseSize * 0.55) break;
+    const cut = lines.length > 0 && /…$/.test(lines[lines.length - 1]);
+    if (!cut || size <= baseSize * 0.45) break;
     size *= 0.94;
   }
   return { lines, size };
