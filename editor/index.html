@@ -9,8 +9,13 @@
 <title>릴스 자동 편집기 · 맹수니</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
 <style>
+  /* 추가 한글 폰트 3종 (jsDelivr CDN) — 캔버스에도 쓰려고 문서에 등록해 둔다 */
+  @font-face{font-family:"ChosunGu";src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGu.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:"ChosunKm";src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunKm.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:"BM Kkubulim";src:url("https://cdn.jsdelivr.net/gh/fonts-archive/BMKkubulim/BMKkubulim.woff2") format("woff2"),url("https://cdn.jsdelivr.net/gh/fonts-archive/BMKkubulim/BMKkubulim.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
   :root{
     --bg:#FFF8F5;
     --bg-2:#FBF1ED;
@@ -195,6 +200,16 @@
   .row.wrap{flex-wrap:wrap}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  input[type=password]{width:100%;background:var(--card-2);border:1px solid var(--line-2);border-radius:10px;padding:9px 10px;font-size:13.5px;outline:none;font-family:var(--mono)}
+  input[type=password]:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .fontprev{margin-top:8px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:10px;background:var(--card-2);font-size:19px;line-height:1.35;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hint.warn{color:var(--warn)}
+  .hint.ok{color:var(--ok)}
+  .tts-card{margin-top:14px;background:var(--card-2);border:1px solid var(--line);border-radius:13px;padding:12px 12px 14px}
+  .tts-card h4{margin:0 0 4px;font-size:12.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:6px}
+  .tts-card h4 .opt{font-size:10.5px;font-weight:700;color:var(--ink-3);margin-left:auto}
+  .tts-card .field{margin-top:10px}
+  .tts-card .btn.wide{margin-top:12px}
   .chips{display:flex;gap:6px;flex-wrap:wrap}
   .chip{
     border:1.5px solid var(--line-2);background:var(--card-2);border-radius:999px;padding:5px 10px;
@@ -577,6 +592,53 @@
             <button class="btn ghost sm" id="btnNarrClear" type="button">나레이션 빼기</button>
           </div>
           <div class="stats" id="narrStats" style="margin-top:10px"></div>
+
+          <div class="tts-card" id="ttsCard">
+            <h4>🎙️ 대본으로 AI 음성 만들기 <span class="opt">Gemini TTS</span></h4>
+            <div class="grid2">
+              <div class="field">
+                <label for="ttsVoice">목소리</label>
+                <select id="ttsVoice">
+                  <option value="Kore">Kore · 단단한 여성</option>
+                  <option value="Aoede">Aoede · 밝고 가벼운 여성</option>
+                  <option value="Leda">Leda · 젊고 산뜻한 여성</option>
+                  <option value="Zephyr">Zephyr · 맑고 또렷한 여성</option>
+                  <option value="Puck">Puck · 활기찬 톤</option>
+                  <option value="Charon">Charon · 낮고 차분한 남성</option>
+                  <option value="Fenrir">Fenrir · 힘 있는 남성</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ttsKey">Gemini API 키</label>
+                <input id="ttsKey" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza..." />
+              </div>
+            </div>
+            <div class="row wrap" style="margin-top:6px">
+              <button class="btn ghost sm" id="btnTtsKeySave" type="button">키 저장</button>
+              <button class="btn ghost sm" id="btnTtsKeyClear" type="button" hidden>키 삭제</button>
+              <span class="hint" id="ttsKeyNote" style="margin:0">키 없음 · 대본 스튜디오와 같은 키를 써요</span>
+            </div>
+            <div class="field">
+              <label for="ttsTone">톤·속도 지시문</label>
+              <textarea id="ttsTone" rows="2">20대 한국인 여성 뷰티 크리에이터처럼 밝고 또박또박, 약간 빠른 릴스 템포로 읽어줘:</textarea>
+            </div>
+            <div class="field">
+              <div class="lbl-row"><span class="lbl">읽을 대본</span><span class="hint" id="ttsSrcNote" style="margin:0">② 대본 자막에서 가져옴</span></div>
+              <textarea id="ttsText" rows="5" placeholder="② 대본·자막에서 자막을 만들면 여기 자동으로 채워져요. 직접 고쳐도 돼요."></textarea>
+              <div class="row wrap" style="margin-top:6px">
+                <button class="btn ghost sm" id="btnTtsFromSubs" type="button">자막에서 다시 가져오기</button>
+                <span class="hint" id="ttsCount" style="margin:0">0자</span>
+              </div>
+            </div>
+            <button class="btn primary wide" id="btnTtsGen" type="button">🎙️ 음성 만들기</button>
+            <p class="hint" id="ttsStatus">만들면 나레이션 트랙에 바로 올라가요 (무음컷·영상 길이 맞춤까지 자동).</p>
+            <div id="ttsResult" hidden>
+              <div class="row wrap" style="margin-top:8px">
+                <button class="btn sm" id="btnTtsDownload" type="button">.wav 다운로드</button>
+                <span class="hint" id="ttsResultNote" style="margin:0"></span>
+              </div>
+            </div>
+          </div>
         </section>
         <section>
           <h3>BGM <span class="opt">선택</span></h3>
@@ -611,6 +673,9 @@
                 <option value="black">Black Han Sans (굵음)</option>
                 <option value="jua">Jua (둥근)</option>
                 <option value="noto">Noto Sans KR 900</option>
+                <option value="chosun_gu">조선굴림체 (ChosunGu)</option>
+                <option value="chosun_km">조선굵은명조 (ChosunKm)</option>
+                <option value="kkubulim">꾸불림체 (BM Kkubulim)</option>
               </select>
             </div>
             <div class="field">
@@ -621,6 +686,7 @@
               </select>
             </div>
           </div>
+          <div class="fontprev" id="titleFontPrev">다이소 5천원짜리가 이 퀄리티?!</div>
           <div class="field">
             <span class="lbl">글자색</span>
             <div class="chips" id="titleColorChips"></div>
@@ -653,6 +719,9 @@
                 <option value="jua">Jua (둥근)</option>
                 <option value="black">Black Han Sans (굵음)</option>
                 <option value="noto">Noto Sans KR 900</option>
+                <option value="chosun_gu">조선굴림체 (ChosunGu)</option>
+                <option value="chosun_km">조선굵은명조 (ChosunKm)</option>
+                <option value="kkubulim">꾸불림체 (BM Kkubulim)</option>
               </select>
             </div>
             <div class="field">
@@ -660,6 +729,7 @@
               <div class="chips" id="subColorChips"></div>
             </div>
           </div>
+          <div class="fontprev" id="subFontPrev">오늘도 화장 레벨업 중 ✨</div>
           <div class="field">
             <span class="lbl">외곽선</span>
             <div class="chips" id="subOutlineChips"></div>
@@ -819,17 +889,43 @@ const FONTS = {
   black: '"Black Han Sans", "Noto Sans KR", sans-serif',
   jua: '"Jua", "Noto Sans KR", sans-serif',
   noto: '"Noto Sans KR", sans-serif',
+  chosun_gu: '"ChosunGu", "Noto Sans KR", sans-serif',
+  chosun_km: '"ChosunKm", "Noto Sans KR", serif',
+  kkubulim: '"BM Kkubulim", "Jua", "Noto Sans KR", sans-serif',
 };
-const FONT_WEIGHT = { black: 400, jua: 400, noto: 900 };
+const FONT_WEIGHT = { black: 400, jua: 400, noto: 900, chosun_gu: 400, chosun_km: 400, kkubulim: 400 };
+/* document.fonts.load/check에 쓰는 패밀리 이름 (@font-face에 선언한 이름과 같아야 한다) */
+const FONT_FAMILY = {
+  black: 'Black Han Sans', jua: 'Jua', noto: 'Noto Sans KR',
+  chosun_gu: 'ChosunGu', chosun_km: 'ChosunKm', kkubulim: 'BM Kkubulim',
+};
+const FONT_SAMPLE = '가나다ABC힣123!?';
+const fontState = {};
 
-async function loadFonts() {
+/* 한 폰트를 실제로 받아 두고, 도착하면 캔버스를 다시 그린다. 이미 있으면 즉시 true. */
+async function ensureFontLoaded(key) {
+  const fam = FONT_FAMILY[key];
+  if (!fam) return false;
+  const spec = `${FONT_WEIGHT[key] || 400} 100px "${fam}"`;
+  try { if (document.fonts.check(spec, FONT_SAMPLE)) { fontState[key] = 'ok'; return true; } } catch (e) { /* check를 못하면 load로 */ }
   try {
-    await Promise.all([
-      document.fonts.load('100px "Black Han Sans"', '가나다ABC'),
-      document.fonts.load('100px "Jua"', '가나다ABC'),
-      document.fonts.load('900 100px "Noto Sans KR"', '가나다ABC'),
-      document.fonts.load('700 100px "Noto Sans KR"', '가나다ABC'),
-    ]);
+    const faces = await document.fonts.load(spec, FONT_SAMPLE);
+    const ok = !!(faces && faces.length);
+    fontState[key] = ok ? 'ok' : 'fail';
+    if (ok) scheduleDraw();
+    return ok;
+  } catch (e) {
+    fontState[key] = 'fail';
+    return false;
+  }
+}
+
+async function loadFonts(extra) {
+  const keys = Array.from(new Set(['black', 'jua', 'noto'].concat(extra || []))).filter((k) => FONT_FAMILY[k]);
+  try {
+    await Promise.all(keys.map((k) => ensureFontLoaded(k)).concat([
+      document.fonts.load('700 100px "Noto Sans KR"', FONT_SAMPLE).catch(() => {}),
+    ]));
   } catch (e) { /* 폰트를 못 받아도 시스템 폰트로 그린다 */ }
   try { await document.fonts.ready; } catch (e) {}
 }
@@ -2248,6 +2344,263 @@ function reanalyzeNarration(notify = false) {
   if (notify) toast(`무음 ${Math.max(0, S.narration.kept.length - 1)}곳 잘라냈어요`);
 }
 
+/* ---------- Gemini TTS (대본 → 음성) ---------- */
+/* 대본 스튜디오(index.html)와 같은 키를 쓴다: localStorage 'reels.gemini.key' */
+const TTS = {
+  keyName: 'reels.gemini.key',
+  voiceKey: 'reels.tts.voice',
+  toneKey: 'reels.tts.tone',
+  model: 'gemini-2.5-flash-preview-tts',
+  endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent',
+  busy: false,
+  edited: false,
+  blob: null,
+  name: '',
+  mime: '',
+};
+
+function lsGet(k, d) { try { const v = window.localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function lsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+function lsDel(k) { try { window.localStorage.removeItem(k); } catch (e) { /* ignore */ } }
+
+function ttsScriptFromSubs() {
+  return S.subs.map((s) => String((s && s.text) || '').replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
+}
+
+function ttsStamp() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+function syncTtsCount() {
+  const el = $('#ttsText');
+  const out = $('#ttsCount');
+  if (!el || !out) return;
+  const txt = el.value.trim();
+  const n = txt.length;
+  // 한국어 릴스 나레이션은 대략 초당 5~5.5자
+  out.textContent = n ? `${n}자 · 약 ${Math.max(1, Math.round(n / 5.2))}초` : '0자';
+}
+
+function syncTtsFromSubs(force) {
+  const textEl = $('#ttsText');
+  const note = $('#ttsSrcNote');
+  if (!textEl) return;
+  const txt = ttsScriptFromSubs();
+  if (!txt) {
+    if (note) note.textContent = '② 대본에 자막이 아직 없어요';
+    if (force) toast('② 대본·자막에 자막 블럭이 없어요. 대본을 나누면 여기 자동으로 채워져요', 3200);
+    return;
+  }
+  textEl.value = txt;
+  TTS.edited = false;
+  if (note) note.textContent = `② 대본 자막 ${S.subs.length}줄에서 가져옴`;
+  syncTtsCount();
+  if (force) toast(`자막 ${S.subs.length}줄을 가져왔어요`);
+}
+
+function refreshTtsKeyNote() {
+  const saved = lsGet(TTS.keyName, '');
+  const note = $('#ttsKeyNote');
+  const clear = $('#btnTtsKeyClear');
+  if (!note) return;
+  if (saved) {
+    note.textContent = '저장된 키 있음 · 대본 스튜디오와 함께 써요';
+    note.className = 'hint ok';
+    if (clear) clear.hidden = false;
+  } else {
+    note.textContent = '키 없음 · 대본 스튜디오와 같은 키를 써요';
+    note.className = 'hint';
+    if (clear) clear.hidden = true;
+  }
+  if (note.style) note.style.margin = '0';
+}
+
+/* base64 → 바이트 (atob은 한 번에 큰 문자열도 처리한다) */
+function base64Bytes(b64) {
+  const s = String(b64 || '').replace(/\s+/g, '');
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/* 16-bit LE PCM → 44바이트 헤더를 붙인 WAV */
+function pcmToWav(bytes, opts = {}) {
+  const rate = opts.rate > 0 ? Math.round(opts.rate) : 24000;
+  const channels = opts.channels > 0 ? Math.round(opts.channels) : 1;
+  const bits = opts.bits > 0 ? Math.round(opts.bits) : 16;
+  const blockAlign = Math.max(1, Math.round(channels * bits / 8));
+  const dataBytes = Math.max(0, bytes.length - (bytes.length % blockAlign));
+  const buf = new ArrayBuffer(44 + dataBytes);
+  const view = new DataView(buf);
+  const ascii = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+  ascii(0, 'RIFF');
+  view.setUint32(4, 36 + dataBytes, true);
+  ascii(8, 'WAVE');
+  ascii(12, 'fmt ');
+  view.setUint32(16, 16, true);      // fmt 청크 크기
+  view.setUint16(20, 1, true);       // 1 = PCM
+  view.setUint16(22, channels, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * blockAlign, true); // byte rate
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bits, true);
+  ascii(36, 'data');
+  view.setUint32(40, dataBytes, true);
+  new Uint8Array(buf, 44).set(bytes.subarray(0, dataBytes));
+  return new Uint8Array(buf);
+}
+
+/* inlineData → WAV. 이미 wav면 그대로, PCM(L16·rate=·channels=)이면 헤더를 붙인다. */
+function inlineToWav(bytes, mime) {
+  const m = String(mime || '');
+  if (/wav|wave|riff/i.test(m)) return bytes;
+  const rateM = m.match(/rate\s*=\s*(\d+)/i);
+  const chM = m.match(/channels?\s*=\s*(\d+)/i) || m.match(/stereo/i);
+  const bitsM = m.match(/L(\d+)/i) || m.match(/(?:bits?|depth)\s*=\s*(\d+)/i);
+  return pcmToWav(bytes, {
+    rate: rateM ? parseInt(rateM[1], 10) : 24000,
+    channels: chM ? (typeof chM[1] === 'string' ? parseInt(chM[1], 10) : 2) : 1,
+    bits: bitsM ? parseInt(bitsM[1], 10) : 16,
+  });
+}
+
+function ttsApiError(status, detail) {
+  const d = String(detail || '');
+  if (/API key not valid|API_KEY_INVALID|invalid api key/i.test(d)) return 'API 키가 올바르지 않아요. AI Studio에서 발급한 키를 다시 넣어 주세요.';
+  if (status === 401) return 'API 키 인증에 실패했어요. 키를 다시 넣어 주세요.';
+  if (status === 403) return '이 키로는 TTS 요청이 거부됐어요. 키 상태와 제한(HTTP 리퍼러·IP) 설정을 확인해 주세요.';
+  if (status === 404) return `지금 TTS 모델(${TTS.model})을 쓸 수 없어요. 잠시 뒤 다시 시도해 주세요.`;
+  if (status === 429) return '무료 사용량(할당량)을 다 썼어요. 잠시 뒤 다시 시도하거나 AI Studio에서 사용량을 확인해 주세요.';
+  if (status === 400 && /api key/i.test(d)) return 'API 키를 확인해 주세요. AI Studio에서 발급한 키를 그대로 붙여넣어 주세요.';
+  if (status === 400) return '요청을 처리하지 못했어요. 읽을 대본이 너무 길지 않은지 확인하고 지시문을 조금 줄여 다시 시도해 주세요.';
+  if (status >= 500) return 'Gemini 서버가 잠시 혼잡해요. 1~2분 뒤 다시 시도해 주세요.';
+  return '음성을 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.';
+}
+
+async function generateTts() {
+  if (TTS.busy) return;
+  const statusEl = $('#ttsStatus');
+  const btn = $('#btnTtsGen');
+  const setStatus = (msg, cls) => {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.className = 'hint' + (cls ? ' ' + cls : '');
+  };
+  const fail = (msg) => { setStatus(msg, 'warn'); toast(msg, 4600); };
+
+  const key = ($('#ttsKey').value || '').trim() || lsGet(TTS.keyName, '');
+  const text = ($('#ttsText').value || '').trim();
+  const tone = ($('#ttsTone').value || '').trim();
+  const voice = ($('#ttsVoice').value || 'Kore').trim();
+
+  if (!key) { fail('Gemini API 키가 없어요. 위 키 칸에 넣고 [키 저장]을 눌러 주세요.'); $('#ttsKey').focus(); return; }
+  if (!text) { fail('읽을 대본이 비어 있어요. ② 대본·자막을 나누거나 아래 칸에 직접 붙여넣어 주세요.'); $('#ttsText').focus(); return; }
+
+  const prompt = tone ? (tone.replace(/[:：]\s*$/, '') + ':\n' + text) : text;
+  TTS.busy = true;
+  if (btn) { btn.disabled = true; btn.textContent = '음성 만드는 중…'; }
+  setStatus('음성을 만드는 중… (10~30초 걸립니다)');
+  const t0 = (window.performance && performance.now()) || Date.now();
+  try {
+    const res = await fetch(`${TTS.endpoint}?key=${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
+        },
+      }),
+    });
+    if (!res.ok) {
+      let detail = '';
+      try { const j = await res.json(); detail = (j && j.error && (j.error.message || j.error.status)) || ''; } catch (e) { /* ignore */ }
+      throw new Error(ttsApiError(res.status, detail));
+    }
+    const j = await res.json();
+    const cand = (j && j.candidates && j.candidates[0]) || {};
+    const parts = (cand.content && cand.content.parts) || [];
+    let inline = null;
+    for (const p of parts) { if (p && p.inlineData && p.inlineData.data) { inline = p.inlineData; break; } }
+    if (!inline) {
+      const reason = cand.finishReason || (j && j.promptFeedback && j.promptFeedback.blockReason) || '';
+      const said = parts.map((p) => (p && p.text) || '').join(' ').trim();
+      throw new Error('음성 데이터가 응답에 없어요' + (reason ? ` (사유: ${reason})` : '') +
+        (said ? ` — ${said.slice(0, 120)}` : '') + '. 대본을 조금 줄이거나 지시문을 바꿔 다시 시도해 주세요.');
+    }
+    const mime = String(inline.mimeType || 'audio/L16;codec=pcm;rate=24000');
+    const bytes = base64Bytes(inline.data);
+    const wav = inlineToWav(bytes, mime);
+    const blob = new Blob([wav], { type: 'audio/wav' });
+    TTS.blob = blob;
+    TTS.mime = mime;
+    TTS.name = `tts-${voice.toLowerCase()}-${ttsStamp()}.wav`;
+    $('#ttsResult').hidden = false;
+    $('#ttsResultNote').textContent = `${TTS.name} · ${fmtBytes(blob.size)} · ${mime}`;
+
+    const file = new File([blob], TTS.name, { type: 'audio/wav' });
+    await loadNarration(file);
+    if (!S.narration.buffer) throw new Error('음성은 받았지만 나레이션으로 열지 못했어요. 받은 WAV를 다운로드해 다시 올려 주세요.');
+    const secs = (((window.performance && performance.now()) || Date.now()) - t0) / 1000;
+    setStatus(`음성 완성 · ${fmtSec(S.narration.duration)} · 나레이션 트랙에 올렸어요 (${secs.toFixed(1)}초)`);
+    toast('AI 음성을 나레이션에 올렸어요');
+  } catch (e) {
+    const msg = (e && e.message) || '음성을 만들지 못했어요.';
+    fail(msg);
+    ERRORS.push({ type: 'tts', message: msg });
+  } finally {
+    TTS.busy = false;
+    if (btn) { btn.disabled = false; btn.textContent = '🎙️ 음성 만들기'; }
+  }
+}
+
+function bindTTS() {
+  const keyEl = $('#ttsKey');
+  const textEl = $('#ttsText');
+  const toneEl = $('#ttsTone');
+  const voiceEl = $('#ttsVoice');
+  if (!keyEl || !textEl || !toneEl || !voiceEl) return;
+
+  keyEl.value = lsGet(TTS.keyName, '');
+  const savedTone = lsGet(TTS.toneKey, '');
+  if (savedTone) toneEl.value = savedTone;
+  const savedVoice = lsGet(TTS.voiceKey, '');
+  if (savedVoice && Array.from(voiceEl.options).some((o) => o.value === savedVoice)) voiceEl.value = savedVoice;
+  refreshTtsKeyNote();
+  syncTtsFromSubs(false);
+  syncTtsCount();
+
+  textEl.addEventListener('input', () => { TTS.edited = true; syncTtsCount(); });
+  toneEl.addEventListener('change', () => lsSet(TTS.toneKey, toneEl.value));
+  voiceEl.addEventListener('change', () => lsSet(TTS.voiceKey, voiceEl.value));
+  $('#btnTtsKeySave').addEventListener('click', () => {
+    const v = keyEl.value.trim();
+    if (!v) { toast('키를 먼저 붙여넣어 주세요'); keyEl.focus(); return; }
+    lsSet(TTS.keyName, v);
+    refreshTtsKeyNote();
+    toast('Gemini 키를 저장했어요 (대본 스튜디오와 함께 써요)');
+  });
+  $('#btnTtsKeyClear').addEventListener('click', () => {
+    lsDel(TTS.keyName);
+    keyEl.value = '';
+    refreshTtsKeyNote();
+    toast('저장된 키를 지웠어요');
+  });
+  $('#btnTtsFromSubs').addEventListener('click', () => syncTtsFromSubs(true));
+  $('#btnTtsGen').addEventListener('click', () => generateTts());
+  $('#btnTtsDownload').addEventListener('click', () => {
+    if (!TTS.blob) { toast('먼저 음성을 만들어 주세요'); return; }
+    downloadBlob(TTS.blob, TTS.name || 'narration.wav');
+    toast('WAV 파일을 내려받아요');
+  });
+  const tabAudio = document.getElementById('tab-audio');
+  if (tabAudio) tabAudio.addEventListener('click', () => { if (!TTS.edited) syncTtsFromSubs(false); });
+}
+
 /* ---------- 클립 UI ---------- */
 function renderClips() {
   const list = $('#clipList');
@@ -2602,7 +2955,7 @@ async function exportMP4() {
   try {
     if (S.play.playing) pausePlayback();
     stopAllVideos();
-    await loadFonts();
+    await loadFonts([S.title.font, S.subStyle.font]);
     await buildMaster();
     const { Muxer, ArrayBufferTarget } = await loadMux();
     logExport('mp4-muxer 로드 완료');
@@ -2715,7 +3068,7 @@ async function recordRealtime() {
   $('#exportLog').innerHTML = '';
   logExport('실시간 녹화 시작 · ' + S.caps.recorderMime);
   try {
-    await loadFonts();
+    await loadFonts([S.title.font, S.subStyle.font]);
     await buildMaster();
     const ctx = await ensureAudioCtx();
     const stream = stageCv.captureStream(S.settings.fps);
@@ -3087,12 +3440,28 @@ function bindStyle() {
   const titleOn = $('#titleOn');
   titleOn.addEventListener('change', () => { S.title.on = titleOn.checked; scheduleDraw(); });
   $('#titleText').addEventListener('input', (e) => { S.title.text = e.target.value; titleAutoRows(e.target); scheduleDraw(); });
-  $('#titleFont').addEventListener('change', (e) => { S.title.font = e.target.value; scheduleDraw(); });
+  $('#titleFont').addEventListener('change', (e) => {
+    S.title.font = e.target.value;
+    updateFontPrev();
+    scheduleDraw();
+    ensureFontLoaded(S.title.font).then((ok) => {
+      scheduleDraw();
+      if (!ok) toast('폰트를 불러오지 못했어요. 네트워크를 확인해 주세요(지금은 기본 폰트로 보여요)', 3600);
+    });
+  });
   $('#titlePos').addEventListener('change', (e) => { S.title.pos = e.target.value; scheduleDraw(); });
   $('#titleScale').addEventListener('input', (e) => { S.title.scale = parseFloat(e.target.value); $('#titleScaleOut').textContent = S.title.scale.toFixed(2) + 'x'; scheduleDraw(); });
   $('#titleStart').addEventListener('change', (e) => { S.title.start = Math.max(0, parseFloat(e.target.value) || 0); updateTitleDur(); scheduleDraw(); });
   $('#titleEnd').addEventListener('change', (e) => { S.title.end = Math.max(S.title.start + 0.2, parseFloat(e.target.value) || 2); updateTitleDur(); scheduleDraw(); });
-  $('#subFont').addEventListener('change', (e) => { S.subStyle.font = e.target.value; scheduleDraw(); });
+  $('#subFont').addEventListener('change', (e) => {
+    S.subStyle.font = e.target.value;
+    updateFontPrev();
+    scheduleDraw();
+    ensureFontLoaded(S.subStyle.font).then((ok) => {
+      scheduleDraw();
+      if (!ok) toast('폰트를 불러오지 못했어요. 네트워크를 확인해 주세요(지금은 기본 폰트로 보여요)', 3600);
+    });
+  });
   $('#subScale').addEventListener('input', (e) => { S.subStyle.scale = parseFloat(e.target.value); $('#subScaleOut').textContent = S.subStyle.scale.toFixed(2) + 'x'; scheduleDraw(); });
   $('#subY').addEventListener('input', (e) => { S.subStyle.y = parseFloat(e.target.value); $('#subYOut').textContent = Math.round(S.subStyle.y * 100) + '%'; scheduleDraw(); });
   $('#subPlate').addEventListener('change', (e) => { S.subStyle.plate = e.target.checked; scheduleDraw(); });
@@ -3108,6 +3477,21 @@ function bindStyle() {
     detectCaps();
   });
   updateTitleDur();
+  updateFontPrev();
+}
+
+/* 폰트 선택 아래 미리보기 줄을 고른 폰트로 그린다 (이때 브라우저가 폰트를 받아온다) */
+function updateFontPrev() {
+  const t = $('#titleFontPrev');
+  if (t) {
+    t.style.fontFamily = FONTS[S.title.font] || FONTS.jua;
+    t.style.fontWeight = String(FONT_WEIGHT[S.title.font] || 400);
+  }
+  const s = $('#subFontPrev');
+  if (s) {
+    s.style.fontFamily = FONTS[S.subStyle.font] || FONTS.jua;
+    s.style.fontWeight = String(FONT_WEIGHT[S.subStyle.font] || 400);
+  }
 }
 
 function titleAutoRows(el) {
@@ -3242,6 +3626,7 @@ async function init() {
   bindScript();
   bindStyle();
   bindAudio();
+  bindTTS();
   bindTransport();
   bindExport();
   renderAllChips();
@@ -3250,7 +3635,7 @@ async function init() {
   renderTimeline();
   updateAllStats();
   drawFrame(0);
-  await loadFonts();
+  await loadFonts([S.title.font, S.subStyle.font]);
   drawFrame(0);
   detectCaps().then(() => loadMux().catch(() => {}));
   // 문서 전체 드래그 기본 동작 막기 (파일 놓칠 때 페이지가 파일을 여는 것 방지)
@@ -3264,6 +3649,9 @@ window.__studio = {
   seekTo, startPlayback, pausePlayback, addClipFiles, openSource, addClipFromSource, srcAddCut,
   srcMarkIn, srcMarkOut, loadSourceIntoViewer, decodeAudioFromMedia, extractAudioTrack, loadNarration,
   reanalyzeNarration, exportMP4, exportSRT, renderChips,
+  tts: { generate: generateTts, scriptFromSubs: ttsScriptFromSubs, syncFromSubs: syncTtsFromSubs, pcmToWav, inlineToWav, base64Bytes, state: TTS },
+  fonts: { FONTS, FONT_WEIGHT, FONT_FAMILY, ensureFontLoaded, loadFonts, state: fontState },
+  errors: ERRORS,
 };
 
 init();
