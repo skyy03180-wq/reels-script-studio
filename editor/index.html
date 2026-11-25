@@ -532,7 +532,7 @@
             <input id="clipInput" type="file" accept="video/*,.mp4,.mov,.webm,.m4v" multiple hidden />
             <div class="ic" aria-hidden="true">🎞️</div>
             <div class="t">영상 끌어다 놓거나 눌러서 고르기</div>
-            <div class="s">5분 통영상 하나면 충분해요 · 여러 개도 한 번에</div>
+            <div class="s">5분 통영상 하나 또는 짧은 클립 여러 개를 한 번에</div>
           </div>
           <p class="hint">아이폰 기본 .mov(HEVC)가 안 열리면 사진 앱에서 <b>H.264(.mp4)</b>로 내보내 주세요.</p>
         </section>
@@ -892,10 +892,10 @@
   <div class="modal-body">
     <h3>✨ 한 번에 끝내는 순서</h3>
     <ol>
-      <li><b>① 영상</b> — 5분 통영상 하나를 올려요. (여러 개도 한 번에)</li>
+      <li><b>① 영상</b> — 5분 통영상 하나 또는 짧은 클립 여러 개를 한 번에 올려요.</li>
       <li><b>② 대본</b> — 대본을 붙여넣고 <b>자막으로 나누기</b>. 엔터로 나눈 줄이 그대로 1줄 = 1자막이 돼요.</li>
       <li><b>③ 오디오</b> — 캡컷 TTS 파일(또는 TTS 넣은 mp4)을 올리거나, <b>AI 음성 만들기</b>로 대본을 바로 읽혀요.</li>
-      <li>맨 위 <b>✨ AI 자동 편집하기</b>를 누르면 영상 프레임을 훑어 대본 순서에 맞는 구간을 골라 컷으로 붙이고, 자막·효과음까지 얹어요.</li>
+      <li>맨 위 <b>✨ AI 자동 편집하기</b>를 누르면 영상 프레임을 훑어 대본 순서에 맞는 구간을 골라 컷으로 붙이고, 자막·효과음까지 얹어요. 클립을 여러 개 올리면 클립마다 돌아가며 배치해요.</li>
       <li><b>⑤ 내보내기</b> — <b>MP4 내보내기</b>로 1080×1920 릴스를 받아요.</li>
     </ol>
     <h3>① 영상 · 컷 목록</h3>
@@ -2094,6 +2094,32 @@ function keptSegmentsSource() {
   return [{ start: 0, end: S.narration.duration }];
 }
 
+/* ---------- 오디오 포함 여부 판단 ----------
+   "오디오가 있어야 하는 상황"과 "이 브라우저가 오디오를 인코딩할 수 있는지"를 따로 본다.
+   예전에는 AudioEncoder(AAC/Opus)가 없으면 조용히 오디오 트랙을 빼고 무음 MP4를 내려줬다. */
+function audioWanted() {
+  if (S.narration.buffer && S.narration.duration > 0.05) return true;
+  if (S.bgm.buffer && S.bgm.gain > 0.001) return true;
+  if (S.sfx.on && S.sfx.gain > 0.001) return true;
+  return false;
+}
+function audioEncoderReady() {
+  return !!(S.caps.audioAac || S.caps.audioOpus);
+}
+function recorderReady() {
+  return !!(S.caps.recorder && S.caps.recorderMime);
+}
+/* 마스터 버퍼에 실제로 소리가 들어 있는지 (나레이션이 전부 무음이면 무음 영상이 맞다) */
+function masterHasSound(buf) {
+  if (!buf || !buf.length) return false;
+  const data = buf.getChannelData(0);
+  const step = 97;
+  for (let i = 0; i < data.length; i += step) {
+    if (Math.abs(data[i]) > 0.002) return true;
+  }
+  return false;
+}
+
 let masterTimer = 0;
 let masterSeq = 0;
 function scheduleMaster() {
@@ -2102,6 +2128,11 @@ function scheduleMaster() {
 }
 
 async function buildMaster() {
+  /* 나레이션 버퍼는 있는데 무음 분석 결과(kept)가 비어 있으면 마스터에 나레이션이 통째로 빠진다
+     → 내보내기 직전에 buildMaster가 불려도 나레이션이 누락되지 않게 먼저 분석한다. */
+  if (S.narration.buffer && !S.narration.kept.length) {
+    try { reanalyzeNarration(false); } catch (e) { ERRORS.push({ type: 'audio', message: 'reanalyze: ' + ((e && e.message) || e) }); }
+  }
   const seq = ++masterSeq;
   const L = layout();
   if (!S.sfx.on) S.sfx.events = [];
@@ -2824,8 +2855,21 @@ function switchPane(name) {
   if (tab) tab.click();
 }
 
+/* AI 자동 편집이 쓸 소스 영상 목록 — 업로드한 클립 전부(멀티 클립이면 여러 개) */
+function aiSources() {
+  const list = sourceList().filter((s) => s && s.duration > 0.2);
+  if (list.length) return list;
+  const seen = new Set();
+  const out = [];
+  for (const c of S.clips) {
+    const s = c && c.src;
+    if (s && s.duration > 0.2 && !seen.has(s)) { seen.add(s); out.push(s); }
+  }
+  return out;
+}
+
 function aiPickSource() {
-  const list = sourceList();
+  const list = aiSources();
   if (list.length) return list[0];
   if (S.clips.length && S.clips[0].src) return S.clips[0].src;
   return null;
@@ -2853,12 +2897,16 @@ function aiDurations(blocks, totalSec) {
   return d.map((x) => (x * totalSec) / s2);
 }
 
-/* 소스 영상에서 일정 간격으로 저해상도 JPEG 프레임 + 정확한 시간을 뽑는다 */
+/* 소스 영상에서 일정 간격으로 저해상도 JPEG 프레임 + 정확한 시간을 뽑는다 (통영상 1개용) */
 async function extractAiFrames(src, onProgress) {
+  return extractAiFramesCount(src, AI.maxFrames, onProgress);
+}
+
+/* 한 소스에서 count 장을 뽑는다. 멀티 클립이면 클립마다 이 함수를 돌려 프레임을 모은다. */
+async function extractAiFramesCount(src, count, onProgress) {
   const dur = src.duration || 0;
   if (!(dur > 0.2)) throw new Error('영상 길이를 읽지 못했어요');
-  const interval = Math.max(1, Math.min(6, dur / AI.maxFrames));
-  const count = clamp(Math.ceil(dur / interval), 8, AI.maxFrames);
+  const n = clamp(Math.round(count) || AI.maxFrames, 3, AI.maxFrames);
   const el = src.el;
   const wasT = el.currentTime || 0;
   const wasPaused = el.paused;
@@ -2868,8 +2916,8 @@ async function extractAiFrames(src, onProgress) {
   c.width = 270; c.height = 480;
   const x = c.getContext('2d');
   const frames = [];
-  for (let i = 0; i < count; i++) {
-    const t = clamp((dur * (i + 0.5)) / count, 0, Math.max(0, dur - 0.05));
+  for (let i = 0; i < n; i++) {
+    const t = clamp((dur * (i + 0.5)) / n, 0, Math.max(0, dur - 0.05));
     await seekEl(el, t, 1600);
     if (typeof el.requestVideoFrameCallback === 'function') {
       await new Promise((res) => {
@@ -2885,11 +2933,45 @@ async function extractAiFrames(src, onProgress) {
       if (!canvasIsBlank(c)) data = c.toDataURL('image/jpeg', 0.55).split(',')[1] || '';
     } catch (e) { data = ''; }
     if (data) frames.push({ t: round2(t), data });
-    if (onProgress) onProgress((i + 1) / count);
+    if (onProgress) onProgress((i + 1) / n);
   }
   try { el.currentTime = wasT; if (!wasPaused) { /* 소스 뷰어가 재생 중이었으면 그대로 둔다 */ } } catch (e) {}
   if (!frames.length) throw new Error('영상 프레임을 읽지 못했어요. 다른 mp4(H.264)로 시도해 주세요');
-  return { frames, duration: dur, interval };
+  return { frames, duration: dur, interval: dur / n };
+}
+
+/* 멀티 클립: 소스마다 프레임 수를 고르게 나눈다 (총합 최대 AI.maxFrames) */
+function aiFramesPerSource(n) {
+  const budget = AI.maxFrames;
+  const base = Math.max(3, Math.floor(budget / Math.max(1, n)));
+  const arr = new Array(Math.max(1, n)).fill(base);
+  let extra = budget - base * n;
+  for (let i = 0; i < n && extra > 0; i++, extra--) arr[i] += 1;
+  return arr;
+}
+
+/* 멀티 클립: 모든 소스에서 대표 프레임을 뽑고 각 프레임에 클립 번호(srcIndex)를 남긴다 */
+async function extractAiFramesMulti(sources, onProgress) {
+  const list = (sources || []).filter(Boolean);
+  if (!list.length) throw new Error('소스 영상이 없어요');
+  const per = aiFramesPerSource(list.length);
+  const frames = [];
+  const meta = [];
+  for (let i = 0; i < list.length; i++) {
+    const src = list[i];
+    let got = [];
+    try {
+      const r = await extractAiFramesCount(src, per[i], (p) => { if (onProgress) onProgress((i + p) / list.length); });
+      got = r.frames || [];
+    } catch (e) {
+      ERRORS.push({ type: 'ai', message: '클립 ' + (i + 1) + ' 프레임 추출 실패: ' + ((e && e.message) || e) });
+    }
+    got.forEach((f) => frames.push({ t: f.t, data: f.data, srcIndex: i }));
+    meta.push({ index: i, id: src.id, name: src.name, duration: src.duration, frames: got.length });
+    if (onProgress) onProgress((i + 1) / list.length);
+  }
+  if (!frames.length) throw new Error('영상 프레임을 읽지 못했어요. 다른 mp4(H.264)로 시도해 주세요');
+  return { frames, sources: meta };
 }
 
 /* /v1beta/models 로 이 키에 열린 모델을 확인하고, 장면 분석에 쓸 flash 계열을 고른다 */
@@ -2965,18 +3047,36 @@ function aiStripJson(text) {
   return t;
 }
 
-async function aiCallGemini(key, model, src, frames, blocks, durs) {
-  const dur = src.duration;
+async function aiCallGemini(key, model, sources, frames, blocks, durs) {
+  const list = (Array.isArray(sources) ? sources : [sources]).filter(Boolean);
+  const multi = list.length > 1;
+  const durList = (list.length ? list : [{ duration: 1 }]).map((s) => Math.max(0.1, Number(s.duration) || 0.1));
   const lines = [];
   lines.push('너는 한국 뷰티 크리에이터(@maengsuni.log)의 인스타그램 릴스 편집자다.');
-  lines.push('아래에는 원본 영상(총 ' + dur.toFixed(1) + '초)에서 뽑은 장면 프레임이 t=초 단위로 붙어 있고, 나레이션 대본 자막 블록 목록이 있다.');
-  lines.push('각 자막 블록의 말과 가장 잘 맞는 장면이 나오는 원본 영상 구간 [start, end]를 골라라.');
+  if (multi) {
+    lines.push('아래에는 원본 영상 클립 ' + list.length + '개(클립 0~' + (list.length - 1) + ')에서 뽑은 장면 프레임이 "clip=클립번호 t=초"로 붙어 있고, 나레이션 대본 자막 블록 목록이 있다.');
+    lines.push('각 자막 블록의 말과 가장 잘 맞는 장면이 나오는 클립 번호(clip)와, 그 클립 안 구간 [start, end]를 골라라.');
+  } else {
+    lines.push('아래에는 원본 영상(총 ' + durList[0].toFixed(1) + '초)에서 뽑은 장면 프레임이 t=초 단위로 붙어 있고, 나레이션 대본 자막 블록 목록이 있다.');
+    lines.push('각 자막 블록의 말과 가장 잘 맞는 장면이 나오는 원본 영상 구간 [start, end]를 골라라.');
+  }
   lines.push('');
+  if (multi) {
+    lines.push('클립 목록:');
+    list.forEach((s, i) => lines.push('- clip ' + i + ' · ' + (Number(s.duration) || 0).toFixed(1) + '초 · ' + String(s.name || '').slice(0, 40)));
+    lines.push('');
+  }
   lines.push('규칙:');
-  lines.push('- 구간은 0초 ~ ' + dur.toFixed(1) + '초 안. 블록 순서대로 start가 커져야 하고, 앞 블록과 같은 장면을 반복해서 쓰지 마라.');
+  if (multi) {
+    lines.push('- clip은 0~' + (list.length - 1) + ' 정수. start/end는 그 클립 길이 안(0 ~ 클립 길이)이어야 한다.');
+    lines.push('- 클립을 골고루 섞어라. 자막 블록 수가 클립 수 이상이면 모든 클립이 최소 한 번은 나와야 하고, 같은 클립을 연달아 쓰지 마라.');
+    lines.push('- 한 클립 안에서도 앞 블록과 같은 장면을 반복해서 쓰지 말고 서로 다른 구간을 쓴다.');
+  } else {
+    lines.push('- 구간은 0초 ~ ' + durList[0].toFixed(1) + '초 안. 블록 순서대로 start가 커져야 하고, 앞 블록과 같은 장면을 반복해서 쓰지 마라.');
+  }
   lines.push('- 각 구간 길이는 target(초) 이상이어야 한다. target은 그 자막이 화면에 머무는 시간이다.');
   lines.push('- 대본 키워드(손, 얼굴, 제품, 텍스처, 화장, 비교, 도포 등)와 실제 화면 내용이 맞는 곳을 우선한다.');
-  lines.push('- 프레임 간격은 약 ' + (frames.length > 1 ? Math.max(1, Math.round(frames[1].t - frames[0].t)) : 1) + '초라서 start/end는 프레임 사이 값이어도 된다.');
+  lines.push('- 프레임 간격은 클립마다 달라서 start/end는 프레임 사이 값이어도 된다.');
   lines.push('- 확실하지 않으면 가장 자연스러운 장면을 고르고 why에 짧게 적어라.');
   lines.push('');
   lines.push('자막 블록:');
@@ -2984,13 +3084,25 @@ async function aiCallGemini(key, model, src, frames, blocks, durs) {
     lines.push(`${i}. "${String(b.text).replace(/"/g, "'")}" · target ${durs[i].toFixed(2)}초`);
   });
   lines.push('');
-  lines.push('출력은 JSON 하나만: {"cuts":[{"i":0,"start":0,"end":3.2,"why":"손등 비교"}]} — 모든 블록 i를 빠짐없이.');
+  if (multi) {
+    lines.push('출력은 JSON 하나만: {"cuts":[{"i":0,"clip":0,"start":0,"end":3.2,"why":"손등 비교"},{"i":1,"clip":1,"start":0.5,"end":2.8,"why":"제품 클로즈업"}]} — 모든 블록 i를 빠짐없이, clip은 반드시 넣기.');
+  } else {
+    lines.push('출력은 JSON 하나만: {"cuts":[{"i":0,"start":0,"end":3.2,"why":"손등 비교"}]} — 모든 블록 i를 빠짐없이.');
+  }
 
   const parts = [{ text: lines.join('\n') }];
   for (const f of frames) {
-    parts.push({ text: 't=' + f.t + 's' });
+    parts.push({ text: (multi ? 'clip=' + (f.srcIndex || 0) + ' ' : '') + 't=' + f.t + 's' });
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: f.data } });
   }
+  const cutProps = {
+    i: { type: 'INTEGER' },
+    start: { type: 'NUMBER' },
+    end: { type: 'NUMBER' },
+    why: { type: 'STRING' },
+  };
+  const cutRequired = ['i', 'start', 'end'];
+  if (multi) { cutProps.clip = { type: 'INTEGER' }; cutRequired.push('clip'); }
   const body = {
     contents: [{ role: 'user', parts }],
     generationConfig: {
@@ -3001,16 +3113,7 @@ async function aiCallGemini(key, model, src, frames, blocks, durs) {
         properties: {
           cuts: {
             type: 'ARRAY',
-            items: {
-              type: 'OBJECT',
-              properties: {
-                i: { type: 'INTEGER' },
-                start: { type: 'NUMBER' },
-                end: { type: 'NUMBER' },
-                why: { type: 'STRING' },
-              },
-              required: ['i', 'start', 'end'],
-            },
+            items: { type: 'OBJECT', properties: cutProps, required: cutRequired },
           },
         },
         required: ['cuts'],
@@ -3032,37 +3135,85 @@ async function aiCallGemini(key, model, src, frames, blocks, durs) {
   try { parsed = JSON.parse(aiStripJson(text)); } catch (e) { throw new Error('Gemini 응답을 읽지 못했어요 (JSON 아님)'); }
   const cuts = Array.isArray(parsed) ? parsed : (parsed && parsed.cuts);
   if (!Array.isArray(cuts) || !cuts.length) throw new Error('Gemini가 컷 목록을 주지 않았어요');
-  return normalizeAiCuts(cuts, blocks.length, dur, durs);
+  return normalizeAiCuts(cuts, blocks.length, durs, durList);
 }
 
-/* Gemini가 준 구간을 0~길이 안, 순서대로, 최소 길이를 지키게 정리한다 */
-function normalizeAiCuts(cuts, n, dur, durs) {
+/* Gemini가 준 구간을 클립 길이 안, 순서대로, 최소 길이를 지키게 정리한다.
+   durations는 클립별 길이 배열(멀티 클립) 또는 숫자 하나(통영상). */
+function normalizeAiCuts(cuts, n, durs, durations) {
+  const raw = Array.isArray(durations) ? durations : [durations];
+  const durList = raw.map((d) => Math.max(0.1, Number(d) || 0));
+  if (!durList.length) durList.push(1);
+  const prevBy = new Array(durList.length).fill(0);
   const map = new Map();
   for (const c of cuts) {
     const i = Number(c && (c.i != null ? c.i : c.index));
     if (!Number.isInteger(i) || i < 0 || i >= n) continue;
+    let k = Number(c.clip != null ? c.clip : 0);
+    if (!Number.isInteger(k) || k < 0 || k >= durList.length) k = 0;
+    const dur = durList[k];
     let s = Number(c.start), e = Number(c.end);
     if (!isFinite(s) || !isFinite(e)) continue;
-    map.set(i, { start: clamp(s, 0, dur), end: clamp(e, 0, dur), why: String(c.why || '') });
+    map.set(i, { clip: k, start: clamp(s, 0, dur), end: clamp(e, 0, dur), why: String(c.why || '') });
   }
   const out = [];
-  let prev = 0;
+  const push = (i, k, s, e, why) => {
+    const dur = durList[k];
+    const target = Math.max(0.45, durs[i] || 2.4);
+    let ss = clamp(isFinite(s) ? s : prevBy[k], prevBy[k], Math.max(prevBy[k], dur - 0.3));
+    let ee = isFinite(e) ? e : ss + target;
+    if (ee < ss + 0.3) ee = Math.min(dur, ss + target);
+    ee = Math.max(ss + 0.15, Math.min(ee, dur));
+    out.push({ i, clip: k, start: round2(ss), end: round2(ee), why: why || '자동 보정' });
+    prevBy[k] = ss + 0.05;
+  };
   for (let i = 0; i < n; i++) {
     const c = map.get(i);
-    const target = Math.max(0.45, durs[i] || 2.4);
-    let s = c ? c.start : prev;
-    let e = c ? c.end : Math.min(dur, s + target);
-    s = clamp(s, prev, Math.max(0, dur - 0.3));
-    if (e < s + 0.3) e = Math.min(dur, s + target);
-    e = clamp(e, s + 0.2, dur);
-    out.push({ i, start: round2(s), end: round2(e), why: c ? c.why : '자동 보정' });
-    prev = s + 0.05;
+    if (c) push(i, c.clip, c.start, c.end, c.why);
+    else {
+      const k = i % durList.length;
+      push(i, k, prevBy[k], NaN, '자동 보정');
+    }
   }
-  return out;
+  /* 클립이 여러 개인데 AI가 한 클립만 골랐으면, 안 쓰인 클립이 나오도록 블록을 바꿔 배분한다. */
+  if (durList.length > 1 && n >= durList.length) {
+    const used = new Set(out.map((o) => o.clip));
+    for (let k = 0; k < durList.length; k++) {
+      if (used.has(k)) continue;
+      const counts = new Map();
+      out.forEach((o) => counts.set(o.clip, (counts.get(o.clip) || 0) + 1));
+      let pick = -1;
+      for (let j = out.length - 1; j >= 0; j--) {
+        const o = out[j];
+        if (o.clip === k) continue;
+        if ((counts.get(o.clip) || 0) < 2) continue;
+        pick = j;
+        break;
+      }
+      if (pick < 0) break;
+      const o = out[pick];
+      const dur = durList[k];
+      const target = Math.max(0.6, durs[o.i] || 2);
+      o.clip = k;
+      o.start = round2(clamp(prevBy[k], 0, Math.max(0, dur - 0.3)));
+      o.end = round2(Math.min(dur, o.start + target));
+      o.why = (o.why ? o.why + ' · ' : '') + '클립 배분';
+      prevBy[k] = o.start + 0.05;
+      used.add(k);
+    }
+  }
+  return out.sort((a, b) => a.i - b.i);
 }
 
 /* 키 없음/실패 시: 프레임 밝기 변화가 큰 지점(장면 전환)에 맞춰 균등 분배 */
 async function localScenePlan(src, blocks, durs, onProgress) {
+  const list = (Array.isArray(src) ? src : [src]).filter(Boolean);
+  if (list.length > 1) return localScenePlanMulti(list, blocks, durs, onProgress);
+  if (!list.length) throw new Error('소스 영상이 없어요');
+  return localScenePlanOne(list[0], blocks, durs, onProgress);
+}
+
+async function localScenePlanOne(src, blocks, durs, onProgress) {
   const n = blocks.length;
   const dur = src.duration;
   const W = 48, H = 27;
@@ -3119,13 +3270,104 @@ async function localScenePlan(src, blocks, durs, onProgress) {
   return plan;
 }
 
+/* 스마트 폴백(멀티 클립): 모든 클립을 순서대로 고르게 배분하고,
+   클립 안에서는 움직임·선명도가 좋은 구간(가운데를 살짝 선호)을 잡는다. */
+async function localScenePlanMulti(sources, blocks, durs, onProgress) {
+  const n = sources.length;
+  const m = blocks.length;
+  const W = 48, H = 27;
+  const stats = [];
+  for (let k = 0; k < n; k++) {
+    const src = sources[k];
+    const dur = Math.max(0.2, src.duration || 0.2);
+    const samples = clamp(Math.round(dur / 0.4), 6, 40);
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const x = c.getContext('2d', { willReadFrequently: true });
+    const el = src.el;
+    const wasT = el.currentTime || 0;
+    await warmVideo(el);
+    const times = [], motion = [], sharp = [];
+    let prev = null;
+    for (let s = 0; s < samples; s++) {
+      const t = clamp((dur * (s + 0.5)) / samples, 0, Math.max(0, dur - 0.05));
+      await seekEl(el, t, 1400);
+      times.push(t);
+      let gray = null;
+      try {
+        x.drawImage(el, 0, 0, W, H);
+        const d = x.getImageData(0, 0, W, H).data;
+        gray = new Float32Array(W * H);
+        for (let i = 0; i < gray.length; i++) gray[i] = d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114;
+      } catch (e) { gray = null; }
+      let mo = 0, sh = 0;
+      if (gray) {
+        if (prev) { for (let i = 0; i < gray.length; i++) mo += Math.abs(gray[i] - prev[i]); mo /= gray.length; }
+        for (let yy = 1; yy < H; yy++) {
+          for (let xx = 1; xx < W; xx++) {
+            const i = yy * W + xx;
+            sh += Math.abs(gray[i] - gray[i - 1]) + Math.abs(gray[i] - gray[i - W]);
+          }
+        }
+        sh /= (W * H);
+      }
+      motion.push(mo);
+      sharp.push(sh);
+      prev = gray;
+      if (onProgress) onProgress((k + (s + 1) / samples) / n);
+    }
+    try { el.currentTime = wasT; } catch (e) {}
+    const mMax = Math.max.apply(null, motion.concat([0.0001]));
+    const sMax = Math.max.apply(null, sharp.concat([0.0001]));
+    const score = times.map((t, i) => {
+      const v = (motion[i] / mMax) * 0.65 + (sharp[i] / sMax) * 0.35;
+      const center = 1 - 0.45 * Math.abs(t - dur / 2) / Math.max(0.001, dur / 2);
+      return v * center;
+    });
+    stats.push({ times, score, dur, used: [] });
+  }
+  const plan = [];
+  for (let i = 0; i < m; i++) {
+    const k = i % n;
+    const st = stats[k];
+    const dur = st.dur;
+    const target = clamp(Math.max(0.45, durs[i] || 2.4), 0.45, Math.max(0.45, dur));
+    const maxStart = Math.max(0, dur - target);
+    const cands = st.times.map((t) => clamp(t - target / 2, 0, maxStart));
+    cands.push(clamp(maxStart / 2, 0, maxStart));
+    let best = null;
+    for (const s0 of cands) {
+      const e0 = Math.min(dur, s0 + target);
+      let sc = 0, cnt = 0;
+      for (let q = 0; q < st.times.length; q++) {
+        if (st.times[q] >= s0 - 0.01 && st.times[q] <= e0 + 0.01) { sc += st.score[q]; cnt++; }
+      }
+      sc = cnt ? sc / cnt : 0.5;
+      let overlap = 0;
+      for (const u of st.used) overlap += Math.max(0, Math.min(e0, u.end) - Math.max(s0, u.start));
+      sc -= (overlap / Math.max(0.2, target)) * 0.9;
+      if (!best || sc > best.sc) best = { s: s0, e: e0, sc };
+    }
+    const s1 = round2(best ? best.s : 0);
+    const e1 = round2(best ? best.e : Math.min(dur, target));
+    st.used.push({ start: s1, end: e1 });
+    plan.push({ i, clip: k, start: s1, end: e1, why: '클립 ' + (k + 1) + ' · 움직임/선명도' });
+  }
+  return plan;
+}
+
 /* 계획대로 타임라인 클립·자막·오프닝 타이틀을 세팅한다 */
-function applyAiPlan(src, blocks, durs, plan) {
-  const dur = src.duration;
+function applyAiPlan(sources, blocks, durs, plan) {
+  const list = (Array.isArray(sources) ? sources : [sources]).filter(Boolean);
+  if (!list.length) throw new Error('소스 영상이 없어요');
   S.clips.length = 0;
   S.subsAuto = false;
   let made = 0;
+  const usedClips = new Set();
   for (const p of plan.slice().sort((a, b) => a.i - b.i)) {
+    const k = clamp(Number.isInteger(p.clip) ? p.clip : 0, 0, list.length - 1);
+    const src = list[k];
+    const dur = Math.max(0.2, src.duration || 0.2);
     const target = Math.max(0.4, durs[p.i] || 2.4);
     let s = clamp(p.start, 0, Math.max(0, dur - 0.25));
     let e = Math.min(dur, s + target);
@@ -3134,7 +3376,7 @@ function applyAiPlan(src, blocks, durs, plan) {
       e = Math.min(dur, s + Math.min(0.9, target));
     }
     const clip = addClipFromSource(src, s, e);
-    if (clip) made += 1;
+    if (clip) { made += 1; usedClips.add(k); }
   }
   if (!made) throw new Error('컷을 하나도 만들지 못했어요. 영상 구간을 확인해 주세요');
 
@@ -3172,20 +3414,21 @@ function applyAiPlan(src, blocks, durs, plan) {
   if (titleOn) titleOn.checked = !!S.title.on;
   if (titleText) { titleText.value = S.title.text; titleAutoRows(titleText); }
   updateTitleDur();
-  return { clips: made, subs: S.subs.length, total: L.total };
+  return { clips: made, subs: S.subs.length, total: L.total, clipsUsed: usedClips.size, sources: list.length };
 }
 
 async function runAutoEdit() {
   if (AI.busy) return;
   if (S.exporting && S.exporting.busy) { toast('내보내기가 끝난 뒤에 눌러 주세요'); return; }
 
-  const src = aiPickSource();
-  if (!src) {
-    aiSetStatus('① 영상 탭에서 영상을 먼저 올려 주세요. 5분 통영상 하나면 충분해요.', 'warn');
+  const sources = aiSources();
+  if (!sources.length) {
+    aiSetStatus('① 영상 탭에서 영상을 먼저 올려 주세요. 5분 통영상 하나 또는 짧은 클립 여러 개면 돼요.', 'warn');
     toast('소스 영상을 먼저 올려 주세요', 2600);
     switchPane('clips');
     return;
   }
+  const multi = sources.length > 1;
   const read = aiReadScript();
   if (!read) {
     aiSetStatus('② 대본을 붙여넣고 [자막으로 나누기]를 먼저 눌러 주세요.', 'warn');
@@ -3217,8 +3460,12 @@ async function runAutoEdit() {
   aiSetProgress(2, '입력 확인');
   const t0 = performance.now();
   try {
-    aiSetProgress(4, `영상에서 장면 ${Math.min(AI.maxFrames, Math.ceil(src.duration / Math.max(1, Math.min(6, src.duration / AI.maxFrames))))}장 뽑는 중`);
-    const ex = await extractAiFrames(src, (p) => aiSetProgress(4 + p * 24));
+    const perFrames = multi ? aiFramesPerSource(sources.length) : [AI.maxFrames];
+    const frameTotal = perFrames.reduce((a, b) => a + b, 0);
+    aiSetProgress(4, multi ? `클립 ${sources.length}개에서 장면 ${frameTotal}장 뽑는 중` : `영상에서 장면 ${frameTotal}장 뽑는 중`);
+    const ex = multi
+      ? await extractAiFramesMulti(sources, (p) => aiSetProgress(4 + p * 26))
+      : await extractAiFrames(sources[0], (p) => aiSetProgress(4 + p * 26));
     aiSetProgress(30, `장면 ${ex.frames.length}장 분석`);
 
     let plan = null;
@@ -3232,7 +3479,7 @@ async function runAutoEdit() {
         for (const model of picks) {
           try {
             aiSetStatus(`${model}로 장면과 대본을 맞추는 중…`);
-            plan = await aiCallGemini(key, model, src, ex.frames, blocks, durs);
+            plan = await aiCallGemini(key, model, sources, ex.frames, blocks, durs);
             lsSet(AI.modelPickKey, model);
             engine = 'Gemini · ' + model;
             break;
@@ -3252,13 +3499,13 @@ async function runAutoEdit() {
     }
 
     if (!plan) {
-      aiSetProgress(58, '스마트 폴백으로 장면 전환 지점을 찾는 중');
-      plan = await localScenePlan(src, blocks, durs, (p) => aiSetProgress(58 + p * 26));
-      engine = '스마트 폴백 · 장면 변화';
+      aiSetProgress(58, multi ? '스마트 폴백으로 클립마다 장면을 고르는 중' : '스마트 폴백으로 장면 전환 지점을 찾는 중');
+      plan = await localScenePlan(sources, blocks, durs, (p) => aiSetProgress(58 + p * 26));
+      engine = multi ? '스마트 폴백 · 클립 배분' : '스마트 폴백 · 장면 변화';
     }
 
     aiSetProgress(88, '타임라인에 컷 배치');
-    const result = applyAiPlan(src, blocks, durs, plan);
+    const result = applyAiPlan(sources, blocks, durs, plan);
 
     S.sfx.on = $('#sfxToggle') ? $('#sfxToggle').checked : S.sfx.on;
     S.sfx.auto = true;
@@ -3270,7 +3517,7 @@ async function runAutoEdit() {
 
     const L = layout();
     const sfxN = S.sfx.on ? S.sfx.events.length : 0;
-    let msg = `완료 · 컷 ${result.clips}개 · 자막 ${result.subs}줄 · 효과음 ${sfxN}개 · ${L.total.toFixed(1)}초`;
+    let msg = `완료 · 클립 ${result.sources}개 중 ${result.clipsUsed}개 사용 · 컷 ${result.clips}개 · 자막 ${result.subs}줄 · 효과음 ${sfxN}개 · ${L.total.toFixed(1)}초`;
     if (!hasNarr) msg += ' (나레이션 없이 2.6초/컷)';
     let kind = 'ok';
     if (!key) { msg += ' · Gemini 키를 넣으면 장면 맞춤이 더 좋아져요'; kind = 'warn'; }
@@ -3642,6 +3889,27 @@ function renderCapStats() {
     `<div class="r"><span>브라우저</span><b>${navigator.userAgent.includes('Chrome') ? 'Chrome 계열' : navigator.userAgent.includes('Safari') ? 'Safari' : '기타'}</b></div>`;
 }
 
+/* MediaRecorder MIME 고르기. 오디오까지 담을 때는 오디오 코덱이 붙은 컨테이너를 먼저 찾는다
+   (예전에는 video/mp4;codecs=avc1… 만 골라서 녹화본에 소리가 빠질 수 있었다) */
+const RECORDER_MIMES = [
+  'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+  'video/mp4;codecs=avc1,mp4a.40.2',
+  'video/mp4;codecs=avc1.42E01E,opus',
+  'video/mp4;codecs=avc1,opus',
+  'video/mp4;codecs=avc1.42E01E',
+  'video/mp4',
+  'video/webm;codecs=vp9,opus',
+  'video/webm;codecs=vp8,opus',
+  'video/webm',
+];
+function pickRecorderMime(withAudio) {
+  const list = withAudio ? RECORDER_MIMES : RECORDER_MIMES.slice();
+  for (const m of list) {
+    try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (e) {}
+  }
+  return '';
+}
+
 async function detectCaps() {
   const c = S.caps;
   c.webcodecs = typeof window.VideoEncoder === 'function';
@@ -3665,20 +3933,25 @@ async function detectCaps() {
     }
   }
   if (c.recorder) {
-    for (const m of ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']) {
-      try { if (MediaRecorder.isTypeSupported(m)) { c.recorderMime = m; break; } } catch (e) {}
-    }
+    c.recorderMime = pickRecorderMime(false);
   }
   renderCapStats();
   const warn = $('#audioWarn');
+  const noAenc = !c.audioAac && !c.audioOpus;
   if (warn) {
-    warn.hidden = !(c.h264 && !c.audioAac);
+    warn.hidden = !(c.h264 && (noAenc || !c.audioAac));
     if (!warn.hidden) {
-      warn.innerHTML = '이 브라우저에는 AAC 인코더가 없어서 MP4 오디오가 <b>Opus</b>로 들어가요. 인스타 업로드가 막히면 ① <b>오디오 WAV</b>를 같이 받아 캡컷에서 영상+WAV로 다시 내보내거나, ② 인스타 앱에서 음악을 따로 붙이는 방법이 확실해요.';
+      warn.innerHTML = noAenc
+        ? '이 브라우저에는 AAC·Opus 오디오 인코더가 없어서 <b>MP4 내보내기를 누르면 실시간 녹화로 저장</b>하며 오디오까지 함께 담아요. (녹화는 영상 길이만큼 걸려요)'
+        : '이 브라우저에는 AAC 인코더가 없어서 MP4 오디오가 <b>Opus</b>로 들어가요. 인스타 업로드가 막히면 ① <b>오디오 WAV</b>를 같이 받아 캡컷에서 영상+WAV로 다시 내보내거나, ② 인스타 앱에서 음악을 따로 붙이는 방법이 확실해요.';
     }
   }
   const mp4Btn = $('#btnExportMp4');
-  if (mp4Btn) mp4Btn.textContent = (c.h264 && !c.audioAac) ? '🎬 MP4 내보내기 (Opus 오디오)' : '🎬 MP4 내보내기';
+  if (mp4Btn) {
+    mp4Btn.textContent = noAenc
+      ? '🎬 MP4 내보내기 (오디오 포함 녹화)'
+      : (c.h264 && !c.audioAac) ? '🎬 MP4 내보내기 (Opus 오디오)' : '🎬 MP4 내보내기';
+  }
 }
 
 /* ---------- 내보내기 공용 ---------- */
@@ -3761,11 +4034,24 @@ async function paintExportFrame(ctx, W, H, L, t) {
 
 async function exportMP4() {
   if (S.exporting.busy) return;
-  const L = layout();
+  if (S.narration.buffer && !S.narration.kept.length) reanalyzeNarration(false);
+  let L = layout();
   if (!S.clips.length || L.total < 0.1) { toast('클립을 먼저 올려 주세요'); return; }
   if (!S.caps.webcodecs || !S.caps.h264) {
     logExport('이 브라우저는 WebCodecs H.264 인코더가 없어 실시간 녹화로 저장합니다.', true);
-    return recordRealtime();
+    return recordRealtime('no-webcodecs');
+  }
+  /* 오디오가 들어가야 하는데 AAC·Opus 인코더가 둘 다 없으면(iOS Safari) 무음 MP4를 만들지 않고
+     MediaRecorder 실시간 녹화로 자동 전환한다. */
+  if (audioWanted() && !audioEncoderReady()) {
+    if (recorderReady()) {
+      logExport('이 브라우저에는 AAC/Opus 오디오 인코더가 없어서 무음 MP4 대신 실시간 녹화로 저장해요.');
+      toast('오디오를 함께 넣기 위해 실시간 녹화로 저장해요', 3600);
+      return recordRealtime('no-audio-encoder');
+    }
+    logExport('오디오를 넣을 인코더도, 실시간 녹화도 지원하지 않아요. [오디오 WAV]로 받아 캡컷에서 합쳐 주세요.', true);
+    toast('이 브라우저에선 오디오 포함 MP4를 만들 수 없어요 · 오디오 WAV를 받아 캡컷에서 합쳐 주세요', 4600);
+    return;
   }
   S.exporting.busy = true;
   S.exporting.cancel = false;
@@ -3773,18 +4059,28 @@ async function exportMP4() {
   setProgress(1);
   $('#exportLog').innerHTML = '';
   const t0 = performance.now();
+  let fallbackNote = '';
+  let venc = null;
+  let aenc = null;
   logExport(`MP4 렌더링 시작 · ${fmtSec(L.total)} · ${S.settings.w}×${S.settings.h} ${S.settings.fps}fps`);
   try {
     if (S.play.playing) pausePlayback();
     stopAllVideos();
     await loadFonts([S.title.font, S.subStyle.font]);
     await buildMaster();
+    L = layout();
     const { Muxer, ArrayBufferTarget } = await loadMux();
     logExport('mp4-muxer 로드 완료');
     const W = S.settings.w, H = S.settings.h, fps = S.settings.fps;
     const totalFrames = Math.max(1, Math.round(L.total * fps));
     const useAac = S.caps.audioAac;
-    const hasAudio = !!(S.audio.master && (useAac || S.caps.audioOpus));
+    /* 마스터 버퍼에 실제로 소리가 있는지로 판단한다 (나레이션이 전부 무음이면 무음 영상이 맞다) */
+    const wantAudio = masterHasSound(S.audio.master);
+    const hasAudio = !!(wantAudio && audioEncoderReady());
+    if (wantAudio && !hasAudio) {
+      fallbackNote = '오디오 인코더가 없어 무음 MP4 대신 실시간 녹화로 저장해요';
+      throw new Error('AUDIO_NO_ENCODER');
+    }
     if (!hasAudio) logExport('오디오가 없어 무음 영상으로 만듭니다.');
     const target = new ArrayBufferTarget();
     const muxer = new Muxer({
@@ -3795,13 +4091,12 @@ async function exportMP4() {
     });
     const bitrate = W >= 1080 ? 8000000 : 4500000;
     let encErr = null;
-    const venc = new VideoEncoder({
+    venc = new VideoEncoder({
       output: (chunk, meta) => { try { muxer.addVideoChunk(chunk, meta); } catch (e) { encErr = e; } },
       error: (e) => { encErr = e; },
     });
     venc.configure({ codec: S.caps.avc, width: W, height: H, bitrate, framerate: fps, latencyMode: 'quality', avc: { format: 'avc' } });
     logExport('영상 인코더 ' + S.caps.avc + ' · ' + Math.round(bitrate / 1e6) + 'Mbps');
-    let aenc = null;
     if (hasAudio) {
       try {
         aenc = new AudioEncoder({
@@ -3830,7 +4125,10 @@ async function exportMP4() {
         await aenc.flush();
         logExport('오디오 인코딩 완료 · ' + (useAac ? 'AAC' : 'Opus') + ' ' + fmtSec(buf.duration));
       } catch (e) {
-        logExport('오디오를 넣지 못했어요: ' + e.message, true);
+        /* 오디오 없이 무음 MP4를 내려받게 두면 안 된다 → 실시간 녹화로 다시 저장한다 */
+        logExport('오디오를 넣지 못했어요: ' + (e.message || e), true);
+        fallbackNote = '오디오를 함께 넣기 위해 실시간 녹화로 저장해요';
+        throw new Error('AUDIO_ENCODE_FAIL');
       }
     }
     setProgress(6);
@@ -3871,16 +4169,30 @@ async function exportMP4() {
   } catch (e) {
     logExport('실패: ' + (e.message || e), true);
     ERRORS.push({ type: 'export', message: String(e.message || e) });
-    toast('MP4 내보내기에 실패했어요. 실시간 녹화로 다시 시도해 보세요', 3200);
+    try { if (venc && venc.state !== 'closed') venc.close(); } catch (err) {}
+    try { if (aenc && aenc.state !== 'closed') aenc.close(); } catch (err) {}
+    if (fallbackNote && recorderReady()) {
+      toast(fallbackNote, 3800);
+    } else if (fallbackNote) {
+      logExport('실시간 녹화도 지원하지 않아요. [오디오 WAV]를 받아 캡컷에서 영상+WAV로 합쳐 주세요.', true);
+      toast('오디오 포함 저장이 안 돼요 · 오디오 WAV를 받아 캡컷에서 합쳐 주세요', 4600);
+    } else {
+      toast('MP4 내보내기에 실패했어요. 실시간 녹화로 다시 시도해 보세요', 3200);
+    }
   } finally {
     S.exporting.busy = false;
     setExportUI(false);
     await seekTo(S.play.t);
   }
+  if (fallbackNote && recorderReady()) {
+    logExport('실시간 녹화로 전환 …');
+    return recordRealtime('mp4-fallback');
+  }
 }
 
-async function recordRealtime() {
+async function recordRealtime(reason = '') {
   if (S.exporting.busy) return;
+  if (S.narration.buffer && !S.narration.kept.length) reanalyzeNarration(false);
   const L = layout();
   if (!S.clips.length || L.total < 0.1) { toast('클립을 먼저 올려 주세요'); return; }
   if (!S.caps.recorder || !S.caps.recorderMime) { toast('이 브라우저는 녹화 저장도 지원하지 않아요', 3000); return; }
@@ -3888,19 +4200,34 @@ async function recordRealtime() {
   S.exporting.cancel = false;
   setExportUI(true);
   $('#exportLog').innerHTML = '';
-  logExport('실시간 녹화 시작 · ' + S.caps.recorderMime);
+  logExport('실시간 녹화 시작 · ' + S.caps.recorderMime + (reason ? ' (' + reason + ')' : ''));
+  /* iOS Safari: 클릭 제스처 안에서 AudioContext를 만들고 resume해야 녹음이 살아난다 */
+  const ctxPromise = ensureAudioCtx();
   try {
     await loadFonts([S.title.font, S.subStyle.font]);
     await buildMaster();
-    const ctx = await ensureAudioCtx();
+    const ctx = await ctxPromise;
+    if (ctx && ctx.state === 'suspended') { try { await ctx.resume(); } catch (e) {} }
+    if (audioWanted() && !S.audio.master) {
+      throw new Error('오디오를 준비하지 못했어요. 나레이션을 다시 올리거나 [오디오 WAV]로 내보내 주세요');
+    }
     const stream = stageCv.captureStream(S.settings.fps);
     let dest = null;
     if (ctx && S.audio.master) {
       dest = ctx.createMediaStreamDestination();
       dest.stream.getAudioTracks().forEach((tr) => stream.addTrack(tr));
       S.audio.extraDest = dest;
+      logExport('오디오 트랙 연결 · ' + fmtSec(S.audio.master.duration) + ' · ctx ' + (ctx.state || ''));
+    } else {
+      logExport('오디오가 없어 영상만 녹화해요', true);
     }
-    const rec = new MediaRecorder(stream, { mimeType: S.caps.recorderMime, videoBitsPerSecond: 8000000 });
+    const recOpts = { mimeType: S.caps.recorderMime, videoBitsPerSecond: 8000000 };
+    if (stream.getAudioTracks().length) {
+      recOpts.mimeType = pickRecorderMime(true) || S.caps.recorderMime;
+      recOpts.audioBitsPerSecond = 128000;
+      logExport('녹화 형식 · ' + recOpts.mimeType);
+    }
+    const rec = new MediaRecorder(stream, recOpts);
     const chunks = [];
     rec.ondataavailable = (ev) => { if (ev.data && ev.data.size) chunks.push(ev.data); };
     const stopped = new Promise((res) => { rec.onstop = res; });
@@ -3919,7 +4246,7 @@ async function recordRealtime() {
     rec.stop();
     await stopped;
     S.audio.extraDest = null;
-    const mime = S.caps.recorderMime.split(';')[0];
+    const mime = (recOpts.mimeType || S.caps.recorderMime).split(';')[0];
     const ext = mime.includes('mp4') ? 'mp4' : 'webm';
     const blob = new Blob(chunks, { type: mime });
     const name = exportName(ext);
@@ -3929,8 +4256,9 @@ async function recordRealtime() {
     toast('녹화 저장 완료');
   } catch (e) {
     logExport('녹화 실패: ' + (e.message || e), true);
-    toast('녹화 저장에 실패했어요', 3000);
+    toast(e.message || '녹화 저장에 실패했어요', 3400);
   } finally {
+    S.audio.extraDest = null;
     S.exporting.busy = false;
     setExportUI(false);
     scheduleDraw();
@@ -4526,9 +4854,14 @@ window.__studio = {
   S, SRC, layout, parseScript, cleanScript, scriptLines, chunkLine, analyzeSilence, buildSRT, buildMaster,
   seekTo, startPlayback, pausePlayback, addClipFiles, openSource, addClipFromSource,
   decodeAudioFromMedia, extractAudioTrack, loadNarration,
-  reanalyzeNarration, exportMP4, exportSRT, renderChips,
+  reanalyzeNarration, exportMP4, exportSRT, renderChips, recordRealtime, detectCaps,
+  audio: { wanted: audioWanted, encoderReady: audioEncoderReady, recorderReady, hasSound: masterHasSound },
   text: { textWidth, paintSpacedText, spacingSupported },
-  ai: { run: runAutoEdit, state: AI, extractFrames: extractAiFrames, localPlan: localScenePlan, apply: applyAiPlan, models: aiDiscoverModels, rank: aiRankModels, normalize: normalizeAiCuts },
+  ai: {
+    run: runAutoEdit, state: AI, sources: aiSources, framesPer: aiFramesPerSource,
+    extractFrames: extractAiFrames, extractFramesMulti: extractAiFramesMulti, call: aiCallGemini,
+    localPlan: localScenePlan, apply: applyAiPlan, models: aiDiscoverModels, rank: aiRankModels, normalize: normalizeAiCuts,
+  },
   sfx: { plan: planSfxEvents, pcm: sfxPcm, preview: previewSfx, spec: SFX_SPEC },
   tts: { generate: generateTts, scriptFromSubs: ttsScriptFromSubs, syncFromSubs: syncTtsFromSubs, pcmToWav, inlineToWav, base64Bytes, state: TTS },
   fonts: { FONTS, FONT_WEIGHT, FONT_FAMILY, ensureFontLoaded, loadFonts, state: fontState },
