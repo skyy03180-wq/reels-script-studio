@@ -2681,12 +2681,16 @@ function bindTTS() {
     if (!v) { toast('키를 먼저 붙여넣어 주세요'); keyEl.focus(); return; }
     lsSet(TTS.keyName, v);
     refreshTtsKeyNote();
+    refreshAiKeyNote();
     toast('Gemini 키를 저장했어요 (대본 스튜디오와 함께 써요)');
   });
   $('#btnTtsKeyClear').addEventListener('click', () => {
     lsDel(TTS.keyName);
     keyEl.value = '';
+    const aiKey = $('#aiKey');
+    if (aiKey) aiKey.value = '';
     refreshTtsKeyNote();
+    refreshAiKeyNote();
     toast('저장된 키를 지웠어요');
   });
   $('#btnTtsFromSubs').addEventListener('click', () => syncTtsFromSubs(true));
