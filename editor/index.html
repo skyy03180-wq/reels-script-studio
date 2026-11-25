@@ -1627,7 +1627,7 @@ function drawPlate(ctx, x, y, w, h, r) {
   ctx.restore();
 }
 
-function drawTitle(ctx, W, H, t) {
+function drawTitle(ctx, W, H, t, opts = {}) {
   const T = S.title;
   if (!T.on || !String(T.text || '').trim()) return;
   if (t < T.start - 0.001 || t > T.end + 0.001) return;
@@ -1641,8 +1641,10 @@ function drawTitle(ctx, W, H, t) {
 
   let alpha = 1;
   const fade = 0.14;
-  if (t < T.start + fade) alpha = clamp((t - T.start) / fade, 0, 1);
-  if (t > T.end - fade) alpha = Math.min(alpha, clamp((T.end - t) / fade, 0, 1));
+  if (!opts.noFade) {
+    if (t < T.start + fade) alpha = clamp((t - T.start) / fade, 0, 1);
+    if (t > T.end - fade) alpha = Math.min(alpha, clamp((T.end - t) / fade, 0, 1));
+  }
 
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -1731,7 +1733,7 @@ function drawFrame(t, opts = {}) {
   } else {
     drawEmptyState(ctx, W, H);
   }
-  drawTitle(ctx, W, H, t);
+  drawTitle(ctx, W, H, t, { noFade: !S.play.playing });
   drawSubs(ctx, W, H, t);
   if (S.settings.showSafe && !S.play.playing && !opts.noGuides) drawSafeGuides(ctx, W, H);
 }
