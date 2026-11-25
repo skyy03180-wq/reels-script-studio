@@ -75,6 +75,7 @@
     border:1px solid var(--line-2);background:var(--card);color:var(--ink);
     padding:9px 13px;border-radius:11px;font-size:13.5px;font-weight:700;cursor:pointer;
     transition:transform .06s ease, background .15s ease, border-color .15s ease, opacity .15s;
+    white-space:nowrap;
   }
   .btn:hover{border-color:var(--accent);color:var(--accent-ink)}
   .btn:active{transform:translateY(1px)}
@@ -454,6 +455,7 @@
             </div>
           </div>
           <label class="switch" style="margin-top:10px"><input type="checkbox" id="cutToggle" checked /> 무음 구간 자동 컷 (점프컷)</label>
+          <label class="switch" style="margin-top:8px"><input type="checkbox" id="fitToggle" checked /> 영상 길이를 나레이션에 맞추기</label>
           <div class="row" style="margin-top:9px">
             <button class="btn sm" id="btnAnalyze" type="button">다시 분석</button>
             <button class="btn ghost sm" id="btnNarrClear" type="button">나레이션 빼기</button>
@@ -586,6 +588,7 @@
             <button class="btn accent" id="btnExportMp4" type="button">🎬 MP4 내보내기</button>
             <button class="btn" id="btnExportSrt" type="button">💬 SRT 자막</button>
           </div>
+          <p class="hint" id="audioWarn" hidden style="color:var(--warn)"></p>
           <div class="row wrap" style="margin-top:7px">
             <button class="btn ghost sm" id="btnRecord" type="button">실시간 녹화로 저장 (폴백)</button>
             <button class="btn ghost sm" id="btnCancelExport" type="button" hidden>취소</button>
@@ -593,7 +596,7 @@
           <div class="progress" id="progressWrap" hidden><i id="progressBar"></i></div>
           <ul class="export-log" id="exportLog"></ul>
           <div id="resultBox"></div>
-          <p class="hint">MP4는 이 브라우저에서 WebCodecs(H.264)로 프레임을 직접 뽑아 만 1~2분 안에 완성돼요. 지원이 안 되면 <b>실시간 녹화</b>로 저장되고, 자막은 캡컷·프리미어에 바로 넣을 수 있는 SRT로도 받을 수 있어요.</p>
+          <p class="hint">MP4는 WebCodecs(H.264)로 프레임을 직접 뽑아 만들어요. 20초 릴스 기준 1~2분쯤 걸리고, 지원이 안 되는 브라우저에서는 <b>실시간 녹화</b>로 저장돼요. 자막은 캡컷·프리미어에 바로 넣는 SRT로도 받을 수 있어요.</p>
         </section>
         <section>
           <h3>브라우저 지원</h3>
@@ -1311,11 +1314,14 @@ function cleanScript(raw) {
   return t;
 }
 
+function hasWord(s) { return /[\uAC00-\uD7A3\u3131-\u318E0-9A-Za-z]/.test(s); }
+
 function chunkLine(line) {
   const clean = line.replace(/\s+/g, ' ').trim();
   if (!clean) return [];
+  if (!hasWord(clean)) return [];
   if (clean.length <= 22) return [clean];
-  const sentences = clean.split(/(?<=[.!?…~])\s*/).filter((s) => s.trim());
+  const sentences = clean.split(/(?<=[.!?…])\s+/).filter((s) => s.trim());
   const out = [];
   for (const s of sentences) {
     if (s.length <= 22) { out.push(s.trim()); continue; }
@@ -1340,14 +1346,14 @@ function chunkLine(line) {
     }
     if (buf) final.push(buf);
   }
-  return final.map((s) => s.replace(/[,，]$/, '').trim()).filter(Boolean);
+  return final.map((s) => s.replace(/[,，]$/, '').trim()).filter((s) => s && hasWord(s));
 }
 
 function parseScript(raw) {
   const cleaned = cleanScript(raw);
   const lines = cleaned.split('\n').map((s) => s.trim()).filter(Boolean);
   const texts = [];
-  for (const line of lines) texts.push(...chunkLine(line));
+  for (const line of lines) texts.push(...chunkLine(line).filter(hasWord));
   return texts.map((text) => ({ id: uid(), text, start: 0, end: 0, color: S.subStyle.color }));
 }
 
@@ -1626,7 +1632,7 @@ function reanalyzeNarration(notify = false) {
 function renderClips() {
   const list = $('#clipList');
   list.innerHTML = '';
-  $('#dotClips').hidden = S.clips.length === 0;
+  $('#dotClips').hidden = S.clips.length > 0;
   if (!S.clips.length) {
     const li = document.createElement('li');
     li.className = 'hint';
@@ -1640,9 +1646,6 @@ function renderClips() {
     li.className = 'clip';
     li.dataset.id = c.id;
     li.draggable = true;
-    const base = clipBase(c);
-    const effRate = layout().scale > 0 ? c.speed / layout().scale : c.speed;
-    const slow = effRate < 0.55, fast = effRate > 2.2;
     li.innerHTML =
       `<div class="clip-thumb" style="${c.thumb ? `background-image:url('${c.thumb}')` : ''}">${c.thumb ? '' : '🎞'}</div>
       <div class="clip-main">
@@ -1652,7 +1655,7 @@ function renderClips() {
           <label>끝(원본)<input type="number" data-k="trimEnd" min="0.1" max="${c.duration.toFixed(2)}" step="0.1" value="${c.trimEnd}" /></label>
           <label>배속<select data-k="speed">${[1, 1.1, 1.2, 1.3, 1.4, 1.5].map((s) => `<option value="${s}" ${Math.abs(c.speed - s) < 0.001 ? 'selected' : ''}>${s.toFixed(1)}x</option>`).join('')}</select></label>
         </div>
-        <div class="clip-meta"><span class="tag">쓰는 길이 ${base.toFixed(1)}초</span>${slow || fast ? `<span class="tag warn">타임라인 배속 ${effRate.toFixed(2)}x</span>` : ''}</div>
+        <div class="clip-meta">${clipMetaInner(c)}</div>
       </div>
       <div class="clip-actions">
         <button type="button" data-act="up" title="위로" ${i === 0 ? 'disabled' : ''}>↑</button>
@@ -1661,6 +1664,15 @@ function renderClips() {
       </div>`;
     list.appendChild(li);
   });
+}
+
+function clipMetaInner(c) {
+  const base = clipBase(c);
+  const scale = layout().scale || 1;
+  const effRate = c.speed / scale;
+  const odd = effRate < 0.6 || effRate > 2.0;
+  return `<span class="tag">쓰는 길이 ${base.toFixed(1)}초</span>` +
+    (odd ? `<span class="tag warn">타임라인 배속 ${effRate.toFixed(2)}x</span>` : '');
 }
 
 function escapeHtml(s) {
@@ -1854,11 +1866,20 @@ async function detectCaps() {
     }
   }
   if (c.recorder) {
-    for (const m of ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']) {
+    for (const m of ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']) {
       try { if (MediaRecorder.isTypeSupported(m)) { c.recorderMime = m; break; } } catch (e) {}
     }
   }
   renderCapStats();
+  const warn = $('#audioWarn');
+  if (warn) {
+    warn.hidden = !(c.h264 && !c.audioAac);
+    if (!warn.hidden) {
+      warn.innerHTML = '이 브라우저에는 AAC 인코더가 없어서 MP4 오디오가 <b>Opus</b>로 들어가요. 인스타에 올릴 AAC 파일이 필요하면 <b>실시간 녹화로 저장</b>을 쓰면 MP4·AAC로 나와요.';
+    }
+  }
+  const mp4Btn = $('#btnExportMp4');
+  if (mp4Btn) mp4Btn.textContent = (c.h264 && !c.audioAac) ? '🎬 MP4 내보내기 (Opus 오디오)' : '🎬 MP4 내보내기';
 }
 
 /* ---------- 내보내기 공용 ---------- */
@@ -2180,7 +2201,18 @@ function bindClips() {
     if (k === 'speed') c.speed = parseFloat(e.target.value) || 1;
     if (c.trimEnd <= c.trimStart) c.trimEnd = Math.min(c.duration, c.trimStart + 0.3);
     fitGuards();
-    afterClipsChanged();
+    // 목록 전체를 다시 그리지 않아 입력 중 포커스가 튀지 않게 한다
+    const meta = li.querySelector('.clip-meta');
+    if (meta) meta.innerHTML = clipMetaInner(c);
+    for (const key of ['trimStart', 'trimEnd']) {
+      const inp = li.querySelector(`[data-k="${key}"]`);
+      if (inp) inp.value = c[key];
+    }
+    renderTimeline();
+    scheduleMaster();
+    if (S.subsAuto) { redistributeSubs(); renderSubs(); }
+    updateAllStats();
+    scheduleDraw();
   });
   // drag reorder
   let dragId = null;
@@ -2227,6 +2259,8 @@ function bindClips() {
   $('#btnFitClips').addEventListener('click', () => {
     if (!S.narration.buffer) { toast('나레이션을 먼저 올려 주세요'); return; }
     S.settings.fit = true;
+    const ft = $('#fitToggle');
+    if (ft) ft.checked = true;
     layout();
     toast('나레이션 길이(' + fmtSec(narrationCutDuration()) + ')에 맞췄어요');
     afterClipsChanged();
@@ -2406,6 +2440,15 @@ function bindAudio() {
     $('#minOut').textContent = S.narration.min.toFixed(2) + '초';
   });
   $('#minRange').addEventListener('change', () => { if (S.narration.buffer) reanalyzeNarration(); });
+  $('#fitToggle').addEventListener('change', (e) => {
+    S.settings.fit = e.target.checked;
+    if (S.subsAuto) redistributeSubs();
+    renderSubs();
+    renderTimeline();
+    updateAllStats();
+    scheduleMaster();
+    scheduleDraw();
+  });
   $('#cutToggle').addEventListener('change', (e) => {
     S.narration.cut = e.target.checked;
     drawWave();
