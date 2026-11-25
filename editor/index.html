@@ -398,6 +398,7 @@
             <button class="btn ghost sm" id="btnFitClips" type="button">나레이션 길이에 맞추기</button>
           </div>
           <p class="hint">순서는 카드의 ↑↓ 또는 드래그로 바꿔요. 구간(시작·끝)은 초 단위, 배속은 1.0~1.5x. 화면은 잘리지 않게 가운데 기준으로 9:16에 꽉 채워요.</p>
+          <p class="hint">아이폰 기본 .mov(HEVC)는 PC 브라우저가 못 여는 경우가 있어요. 그럴 땐 사진 앱에서 <b>H.264(.mp4)</b>로 내보내거나, 클립을 mp4로 변환해 올려 주세요.</p>
           <ul class="clip-list" id="clipList"></ul>
         </section>
       </div>
@@ -870,7 +871,7 @@ async function addClipFiles(fileList) {
       const el = makeVideoEl(url);
       await new Promise((resolve, reject) => {
         const ok = () => { cleanup(); resolve(); };
-        const bad = () => { cleanup(); reject(new Error('브라우저가 이 영상을 열 수 없어요: ' + f.name)); };
+        const bad = () => { cleanup(); reject(new Error('브라우저가 이 영상을 열 수 없어요: ' + f.name + ' — 아이폰 HEVC(.mov)라면 사진 앱에서 H.264(.mp4)로 내보내 주세요')); };
         const cleanup = () => { el.removeEventListener('loadedmetadata', ok); el.removeEventListener('error', bad); };
         el.addEventListener('loadedmetadata', ok);
         el.addEventListener('error', bad);
